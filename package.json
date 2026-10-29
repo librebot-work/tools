@@ -1,0 +1,34 @@
+{
+  "name": "@librebot/tools",
+  "version": "0.1.0",
+  "description": "Public source-format tooling for Librebot bots: parse, validate, preview, scaffold, and skill-lock resolution.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "types": "./src/index.d.ts",
+  "bin": {
+    "librebot": "./bin/librebot.js"
+  },
+  "files": [
+    "src/",
+    "schema/",
+    "bin/",
+    "test/",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "yaml": "2.9.1"
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://librebot.dev/schema/bot-source/v1/bot-yaml-schema.json",
+  "title": "Librebot bot.yaml (source format v1)",
+  "description": "Consolidated bot definition. instructions.md carries the main prompt; knowledge/ and skills/ are file trees; knowledgeSources holds structured external references. Builtin tools are always on and must not be declared; local-execution MCP servers are unsupported.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "name", "description", "modelRoles"],
+  "properties": {
+    "formatVersion": { "const": 1 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "visibility": { "enum": ["public", "private"], "default": "private" },
+    "modelRoles": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "label"],
+        "properties": {
+          "role": { "enum": ["default", "smol", "slow", "plan"] },
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "requirements": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "tools": { "type": "boolean" },
+              "vision": { "type": "boolean" },
+              "reasoning": { "type": "boolean" },
+              "minContextWindow": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "workspace": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "path": { "type": "string", "pattern": "^\\./([^/.][^/]*)(/[^/.][^/]*)*$|^\\./$" }
+        }
+      }
+    },
+    "triggers": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "kind", "eventTypes", "deciderInstructions"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "description": { "type": "string", "maxLength": 2000 },
+          "kind": { "const": "github" },
+          "eventTypes": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$", "maxLength": 120 }
+          },
+          "repository": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mode"],
+            "properties": {
+              "mode": { "enum": ["any", "pinned"] },
+              "fullName": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$" }
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["key", "type"],
+              "properties": {
+                "key": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,63}$" },
+                "label": { "type": "string", "maxLength": 100 },
+                "type": { "enum": ["string", "number", "boolean", "select"] },
+                "required": { "type": "boolean" },
+                "options": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 50,
+                  "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+                },
+                "help": { "type": "string", "maxLength": 500 }
+              }
+            }
+          },
+          "deciderRole": { "enum": ["default", "smol", "slow", "plan"] },
+          "deciderInstructions": { "type": "string", "minLength": 1, "maxLength": 20000 },
+          "enabledByDefault": { "type": "boolean" }
+        }
+      }
+    },
+    "githubActions": {
+      "type": "array",
+      "maxItems": 4,
+      "items": { "enum": ["read_issue", "push_branch", "pull_request", "comment_issue"] }
+    },
+    "connectors": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "tools"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "description": { "type": "string", "maxLength": 1000 },
+          "required": { "type": "boolean" },
+          "tools": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+          },
+          "resources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["key", "label", "tools"],
+              "properties": {
+                "key": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+                "label": { "type": "string", "minLength": 1, "maxLength": 200 },
+                "tools": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": { "type": "string", "minLength": 1, "maxLength": 200 }
+                }
+              }
+            }
+          },
+          "endpoint": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://",
+            "description": "Remote MCP server identity. The runtime binds only this endpoint; local execution is unsupported."
+          }
+        }
+      }
+    },
+    "knowledgeSources": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "kind", "url"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+          "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+          "kind": { "enum": ["resource", "repo"] },
+          "url": { "type": "string", "format": "uri", "maxLength": 500 },
+          "ref": { "type": "string", "maxLength": 256 }
+        }
+      }
+    }
+  }
+}

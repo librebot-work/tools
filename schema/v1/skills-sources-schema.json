@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Librebot skill sources v1",
+  "description": "External skills installed locally and committed with skills/sources.lock and skills/.vendor/.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sources"],
+  "properties": {
+    "version": { "const": 1 },
+    "sources": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "oneOf": [
+          { "type": "string", "minLength": 1, "maxLength": 2000, "description": "A source locator accepted by npx skills." },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "source"],
+            "properties": {
+              "name": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+              "source": { "type": "string", "minLength": 1, "maxLength": 2000, "description": "A standard skills source locator; credentials must not be embedded." },
+              "ref": { "type": "string", "minLength": 1, "maxLength": 256, "description": "Optional explicit GitHub repository ref; other sources encode ref selection in their source locator." },
+              "skills": { "type": "array", "maxItems": 50, "items": { "type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[^-\\s].*$" } }
+            }
+          }
+        ]
+      }
+    }
+  }
+}
