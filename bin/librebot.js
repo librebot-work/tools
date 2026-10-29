@@ -103,7 +103,7 @@ async function cmdPreview(dir, json) {
     return;
   }
   const { draft } = result;
-  console.log(`# ${draft.name} (${draft.visibility})`);
+  console.log(`# ${draft.name}`);
   console.log(`${draft.description}\n`);
   console.log(`prompt: instructions.md (${draft.botPrompt.length} chars)`);
   console.log(`roles: ${draft.modelRoles.map((r) => r.role).join(", ")}`);
@@ -127,10 +127,10 @@ async function cmdPreview(dir, json) {
     }
   }
   if (draft.triggers.length > 0) {
-    console.log(`triggers: ${draft.triggers.map((t) => t.id).join(", ")}`);
+    console.log(`triggers: ${draft.triggers.map((t) => t.label).join(", ")}`);
   }
   if (draft.workspace.length > 0) {
-    console.log(`workspace: ${draft.workspace.map((w) => `${w.id}=${w.path}`).join(", ")}`);
+    console.log(`workspace: ${draft.workspace.map((w) => w.path).join(", ")}`);
   }
   if (draft.githubActions.length > 0) {
     console.log(`githubActions: ${draft.githubActions.join(", ")}`);
@@ -147,7 +147,7 @@ async function cmdScaffold(dir, options) {
   try {
     const written = await scaffoldBot(
       dir,
-      { name, description: options.description ?? "", visibility: options.visibility },
+      { name, description: options.description ?? "" },
       { force: options.force === true },
     );
     if (!options.json) {
@@ -229,7 +229,6 @@ const { values } = parseArgs({
     json: { type: "boolean", default: false },
     name: { type: "string" },
     description: { type: "string" },
-    visibility: { type: "string" },
     force: { type: "boolean", default: false },
     update: { type: "boolean", default: false },
     vendor: { type: "boolean", default: false },
@@ -245,10 +244,7 @@ if (command === "validate") {
   if (!dir) fail("usage: librebot preview <dir> [--json]");
   await cmdPreview(dir, values.json);
 } else if (command === "scaffold") {
-  if (!dir) fail("usage: librebot scaffold <dir> --name <name> [--description ...] [--visibility public|private] [--force]");
-  if (values.visibility !== undefined && values.visibility !== "public" && values.visibility !== "private") {
-    fail("visibility must be public or private");
-  }
+  if (!dir) fail("usage: librebot scaffold <dir> --name <name> [--description ...] [--force]");
   await cmdScaffold(dir, values);
 } else if (command === "resolve-skills") {
   if (!dir) fail("usage: librebot resolve-skills <dir> [--update] [--vendor] [--network]");

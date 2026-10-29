@@ -6,6 +6,7 @@
 // tools are always on (runtime behavior, no contract field).
 
 import { isRecord } from "./errors.js";
+import { sha256Hex } from "./util.js";
 
 export const FORMAT_VERSION = 1;
 export const MODEL_ROLES = ["default", "smol", "slow", "plan"];
@@ -18,10 +19,8 @@ export const GITHUB_ACTIONS = [
 export const TRIGGER_KIND_GITHUB = "github";
 
 const ENTRY_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
-const TRIGGER_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const INPUT_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
 const REPO_FULL_NAME_RE = /^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
-const MOUNT_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const MOUNT_SEGMENT_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const EVENT_TYPE_RE = /^[A-Za-z0-9._-]+$/;
 const REF_RE = /^[A-Za-z0-9._/][A-Za-z0-9._/-]*$/;
@@ -505,24 +504,13 @@ export function validateWorkspaceMounts(input, sink, file) {
       err(sink, file, field, "must be an object");
       return;
     }
-    checkKeys(entry, ["id", "path"], field, sink, file);
-    let id;
-    if (typeof entry.id !== "string" || !MOUNT_ID_RE.test(entry.id.trim())) {
-      err(sink, file, `${field}.id`, "has an invalid id");
-      return;
-    }
-    id = entry.id.trim();
+    checkKeys(entry, ["path"], field, sink, file);
     const path = normalizeMountPath(entry.path, sink, file);
     if (path === undefined) return;
-    mounts.push({ id, path });
+    mounts.push({ id: `workspace-${sha256Hex(path).slice(0, 32)}`, path });
   });
-  const ids = {};
   const paths = {};
   for (const mount of mounts) {
-    if (ids[mount.id] === true) {
-      err(sink, file, "workspace", `contains duplicate mount id ${mount.id}`);
-    }
-    ids[mount.id] = true;
     if (paths[mount.path] === true) {
       err(sink, file, "workspace", `contains duplicate mount path ${mount.path}`);
     }
@@ -695,7 +683,6 @@ export function validateTriggerDefinitions(input, sink, file) {
     checkKeys(
       entry,
       [
-        "id",
         "label",
         "description",
         "kind",
@@ -710,16 +697,6 @@ export function validateTriggerDefinitions(input, sink, file) {
       sink,
       file,
     );
-    if (typeof entry.id !== "string" || !TRIGGER_ID_RE.test(entry.id.trim())) {
-      err(sink, file, `${field}.id`, "is invalid");
-      return;
-    }
-    const id = entry.id.trim();
-    if (seen[id]) {
-      err(sink, file, field, `contains duplicate trigger id ${id}`);
-      return;
-    }
-    seen[id] = true;
     let ok = true;
     if (entry.kind !== TRIGGER_KIND_GITHUB) {
       err(sink, file, `${field}.kind`, "must be github");
@@ -772,6 +749,12 @@ export function validateTriggerDefinitions(input, sink, file) {
     );
     if (label === undefined || deciderInstructions === undefined) ok = false;
     if (!ok) return;
+    const id = `trigger-${sha256Hex(label).slice(0, 32)}`;
+    if (seen[id]) {
+      err(sink, file, `${field}.label`, `contains duplicate trigger label ${label}`);
+      return;
+    }
+    seen[id] = true;
     const definition = {
       id,
       label,

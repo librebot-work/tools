@@ -35,7 +35,6 @@ const TOP_LEVEL_KEYS = [
   "formatVersion",
   "name",
   "description",
-  "visibility",
   "modelRoles",
   "workspace",
   "triggers",
@@ -262,18 +261,6 @@ export async function validateFiles(input) {
     sink,
     FILE_BOT_YAML,
   );
-  let visibility = "private";
-  if (botDoc.visibility !== undefined) {
-    if (botDoc.visibility !== "public" && botDoc.visibility !== "private") {
-      errors.push({
-        file: FILE_BOT_YAML,
-        field: "visibility",
-        message: "must be public or private",
-      });
-    } else {
-      visibility = botDoc.visibility;
-    }
-  }
   let botPrompt;
   try {
     const text = new TextDecoder("utf-8", { fatal: true }).decode(instructionsBytes);
@@ -580,7 +567,6 @@ export async function validateFiles(input) {
   const draft = {
     name,
     description,
-    visibility,
     botPrompt,
     modelRoles,
     knowledge,

@@ -48,7 +48,6 @@ export interface BotConnector {
 export interface BotDraft {
   name: string;
   description: string;
-  visibility: "public" | "private";
   botPrompt: string;
   modelRoles: BotModelRole[];
   knowledge: BotKnowledge[];
@@ -202,7 +201,6 @@ export function fetchLockedSkills(
 export function scaffoldBotFiles(input: {
   name: string;
   description?: string;
-  visibility?: "public" | "private";
 }): Record<string, string>;
 export function exportBotFiles(
   draft: BotDraft,
@@ -215,7 +213,7 @@ export function exportBotFiles(
 ): Record<string, string | Uint8Array>;
 export function scaffoldBot(
   dir: string,
-  input: { name: string; description?: string; visibility?: "public" | "private" },
+  input: { name: string; description?: string },
   options?: { force?: boolean },
 ): Promise<string[]>;
 export function writeFiles(

@@ -32,6 +32,11 @@ Rules:
 
 - `bot.yaml` keys are strict: unknown fields are errors. `tools` was
   removed — builtin tools are always on, never declared.
+- Visibility is platform-managed and is not a source field. Workspace mounts
+  declare `path` without an `id`; triggers declare a unique `label` without an
+  `id`. The parser derives deterministic internal declaration IDs from the
+  normalized path or label; these are not platform IDs and are never exported.
+  Connector and knowledge source IDs remain part of the portable format.
 - `modelRoles[]` accepts optional `requirements: { tools?, vision?,
   reasoning?, minContextWindow? }`, validated and preserved end to end.
 - `knowledge/README.md` is the index, not an entry. Every other file under
@@ -75,7 +80,7 @@ import {
   parseBotSource,  // (dir) -> same; throws BotSourceError on invalid source
   validateFiles,   // non-throwing: { ok, errors, warnings, ... }
   validateSource,  // (dir) -> same; never throws on invalid source (only on IO)
-  scaffoldBotFiles, // ({ name, description?, visibility? }) -> Record<string, string>
+  scaffoldBotFiles, // ({ name, description? }) -> Record<string, string>
   scaffoldBot,     // (dir, input, { force? }) -> written paths
   exportBotFiles,  // (draft, { assets?, skillFiles?, sourcesText?, lockText? }) -> file map
   resolveSkillsLock, // ({ sources, existingLock?, update?, network?, vendor?, fetchImpl? })
@@ -101,7 +106,7 @@ import {
 ```text
 librebot validate <dir> [--json]
 librebot preview <dir> [--json]        # resolved definition; bytes shown as hashes
-librebot scaffold <dir> --name <name> [--description ...] [--visibility public|private] [--force]
+librebot scaffold <dir> --name <name> [--description ...] [--force]
 librebot resolve-skills <dir> [--update] [--vendor] [--network]
 ```
 

@@ -17,6 +17,28 @@ describe("export fidelity", () => {
     assert.deepEqual(roundtrip.draft, initial.draft);
   });
 
+  it("omits platform metadata while retaining semantic identifiers", async () => {
+    const files = exportBotFiles({
+      name: "T",
+      description: "D",
+      visibility: "public",
+      botPrompt: "Hi.",
+      workspace: [{ id: "platform-workspace", path: "./code" }],
+      triggers: [{ id: "platform-trigger", label: "Issues", kind: "github", eventTypes: ["issues.opened"], deciderInstructions: "Decide" }],
+      connectors: [{ id: "connector", label: "Connector", tools: ["search"] }],
+      knowledge: [{ id: "docs", name: "Docs", kind: "resource", url: "https://example.com/docs" }],
+    });
+    assert.doesNotMatch(files["bot.yaml"], /visibility|platform-workspace|platform-trigger/);
+    const parsed = await parseBotFiles(files);
+    assert.equal(parsed.draft.connectors[0].id, "connector");
+    assert.equal(parsed.draft.knowledge[0].id, "docs");
+    assert.equal(parsed.draft.workspace[0].path, "./code");
+    assert.equal(parsed.draft.triggers[0].label, "Issues");
+    assert.equal("visibility" in parsed.draft, false);
+    const again = await parseBotFiles(exportBotFiles(parsed.draft));
+    assert.deepEqual(again.draft, parsed.draft);
+  });
+
   it("round-trips resource/repo knowledge through knowledgeSources", async () => {
     const draft = {
       name: "T",

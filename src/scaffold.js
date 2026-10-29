@@ -21,7 +21,7 @@ function skeletonSkill() {
 
 /**
  * Build a new-bot skeleton file map.
- * @param {{ name: string; description?: string; visibility?: "public"|"private" }} input
+ * @param {{ name: string; description?: string }} input
  * @returns {Record<string, string>}
  */
 export function scaffoldBotFiles(input) {
@@ -29,13 +29,11 @@ export function scaffoldBotFiles(input) {
   if (!name || name.length > 100) {
     throw new Error("scaffold requires a name of 1-100 chars");
   }
-  const visibility = input.visibility === "public" ? "public" : "private";
   const description = String(input?.description ?? "").trim() || `Bot named ${name}.`;
   const botYaml = {
     formatVersion: 1,
     name,
     description,
-    visibility,
     modelRoles: [{ role: "default", label: "Main" }],
     workspace: [],
     triggers: [],
@@ -75,7 +73,6 @@ export function exportBotFiles(
   const {
     name,
     description,
-    visibility,
     botPrompt,
     modelRoles,
     workspace,
@@ -124,10 +121,9 @@ export function exportBotFiles(
     formatVersion: 1,
     name,
     description: description ?? "",
-    visibility: visibility ?? "private",
     modelRoles: modelRoles ?? [{ role: "default", label: "Main" }],
-    workspace: workspace ?? [],
-    triggers: triggers ?? [],
+    workspace: (workspace ?? []).map(({ id, ...mount }) => mount),
+    triggers: (triggers ?? []).map(({ id, ...trigger }) => trigger),
     githubActions: githubActions ?? [],
     connectors: connectors ?? [],
     knowledgeSources,

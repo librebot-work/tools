@@ -1,6 +1,6 @@
 {
   "name": "@librebot/tools",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Public source-format tooling for Librebot bots: parse, validate, preview, scaffold, and skill-lock resolution.",
   "type": "module",
   "scripts": {

@@ -29,7 +29,7 @@ describe("semantic cross-references", () => {
 
   it("rejects triggers whose deciderRole is not declared", async () => {
     const result = await base(
-      "triggers:\n  - id: t\n    label: T\n    kind: github\n    eventTypes: [issues.opened]\n    deciderRole: slow\n    deciderInstructions: decide\n",
+      "triggers:\n  - label: T\n    kind: github\n    eventTypes: [issues.opened]\n    deciderRole: slow\n    deciderInstructions: decide\n",
     );
     assert.equal(result.ok, false);
     assert.ok(messages(result).some((m) => m.includes("declared model roles")));
@@ -42,13 +42,37 @@ describe("semantic cross-references", () => {
   });
 
   it("rejects overlapping and duplicate mounts", async () => {
-    const overlap = await base("workspace:\n  - {id: a, path: ./code}\n  - {id: b, path: ./code/deep}\n");
+    const overlap = await base("workspace:\n  - {path: ./code}\n  - {path: ./code/deep}\n");
     assert.equal(overlap.ok, false);
     assert.ok(messages(overlap).some((m) => m.includes("overlap")));
     const exclusive = await base(
-      "workspace:\n  - {id: a, path: ./}\n  - {id: b, path: ./code}\n",
+      "workspace:\n  - {path: ./}\n  - {path: ./code}\n",
     );
     assert.equal(exclusive.ok, false);
+  });
+
+  it("rejects platform-owned metadata in source", async () => {
+    for (const yaml of [
+      "visibility: private\n",
+      "workspace:\n  - {id: legacy, path: ./code}\n",
+      "triggers:\n  - {id: legacy, label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n",
+    ]) {
+      const result = await base(yaml);
+      assert.equal(result.ok, false);
+      assert.ok(messages(result).some((message) => message.includes("unsupported field")));
+    }
+  });
+
+  it("derives stable declaration identities and rejects duplicate trigger labels", async () => {
+    const yaml = "workspace:\n  - {path: ./code}\ntriggers:\n  - {label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n";
+    const first = await base(yaml);
+    const second = await base(yaml);
+    assert.equal(first.ok, true);
+    assert.deepEqual(first.draft.workspace, second.draft.workspace);
+    assert.deepEqual(first.draft.triggers, second.draft.triggers);
+    const duplicate = await base("triggers:\n  - {label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n  - {label: T, kind: github, eventTypes: [issues.closed], deciderInstructions: decide}\n");
+    assert.equal(duplicate.ok, false);
+    assert.ok(messages(duplicate).some((message) => message.includes("duplicate trigger label")));
   });
 
   it("rejects connector resources outside declared tools", async () => {

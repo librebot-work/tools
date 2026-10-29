@@ -1,7 +1,6 @@
 formatVersion: 1
 name: Example bot
 description: Minimal bot source demonstrating the v1 format.
-visibility: private
 modelRoles:
   - role: default
     label: Main
