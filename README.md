@@ -33,10 +33,10 @@ Rules:
 - `bot.yaml` keys are strict: unknown fields are errors. `tools` was
   removed — builtin tools are always on, never declared.
 - Visibility is platform-managed and is not a source field. Workspace mounts
-  declare `path` without an `id`; triggers declare a unique `label` without an
-  `id`. The parser derives deterministic internal declaration IDs from the
-  normalized path or label; these are not platform IDs and are never exported.
-  Connector and knowledge source IDs remain part of the portable format.
+  declare `path` without an `id`; triggers and connectors declare unique
+  `label` values without an `id`. The parser derives deterministic internal
+  declaration IDs from the normalized path or label; these are not platform
+  IDs and are never exported. Knowledge source IDs remain portable references.
 - `modelRoles[]` accepts optional `requirements: { tools?, vision?,
   reasoning?, minContextWindow? }`, validated and preserved end to end.
 - `knowledge/README.md` is the index, not an entry. Every other file under

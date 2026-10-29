@@ -56,6 +56,7 @@ describe("semantic cross-references", () => {
       "visibility: private\n",
       "workspace:\n  - {id: legacy, path: ./code}\n",
       "triggers:\n  - {id: legacy, label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n",
+      "connectors:\n  - {id: legacy, label: C, tools: [search]}\n",
     ]) {
       const result = await base(yaml);
       assert.equal(result.ok, false);
@@ -64,20 +65,24 @@ describe("semantic cross-references", () => {
   });
 
   it("derives stable declaration identities and rejects duplicate trigger labels", async () => {
-    const yaml = "workspace:\n  - {path: ./code}\ntriggers:\n  - {label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n";
+    const yaml = "workspace:\n  - {path: ./code}\ntriggers:\n  - {label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\nconnectors:\n  - {label: C, tools: [search]}\n";
     const first = await base(yaml);
     const second = await base(yaml);
     assert.equal(first.ok, true);
     assert.deepEqual(first.draft.workspace, second.draft.workspace);
     assert.deepEqual(first.draft.triggers, second.draft.triggers);
+    assert.deepEqual(first.draft.connectors, second.draft.connectors);
     const duplicate = await base("triggers:\n  - {label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n  - {label: T, kind: github, eventTypes: [issues.closed], deciderInstructions: decide}\n");
     assert.equal(duplicate.ok, false);
     assert.ok(messages(duplicate).some((message) => message.includes("duplicate trigger label")));
+    const duplicateConnectors = await base("connectors:\n  - {label: C, tools: [search]}\n  - {label: ' C ', tools: [other]}\n");
+    assert.equal(duplicateConnectors.ok, false);
+    assert.ok(messages(duplicateConnectors).some((message) => message.includes("duplicate connector label")));
   });
 
   it("rejects connector resources outside declared tools", async () => {
     const result = await base(
-      "connectors:\n  - id: c\n    label: C\n    tools: [search]\n    resources:\n      - key: r\n        label: R\n        tools: [delete]\n",
+      "connectors:\n  - label: C\n    tools: [search]\n    resources:\n      - key: r\n        label: R\n        tools: [delete]\n",
     );
     assert.equal(result.ok, false);
     assert.ok(messages(result).some((m) => m.includes("declared connector tool")));
@@ -85,7 +90,7 @@ describe("semantic cross-references", () => {
 
   it("rejects local-execution MCP declarations", async () => {
     const result = await base(
-      "connectors:\n  - id: c\n    label: C\n    tools: [search]\n    command: /bin/evil\n",
+      "connectors:\n  - label: C\n    tools: [search]\n    command: /bin/evil\n",
     );
     assert.equal(result.ok, false);
     assert.ok(
@@ -98,7 +103,7 @@ describe("semantic cross-references", () => {
   it("accepts a remote MCP endpoint and preserves model requirements", async () => {
     const result = await validateFiles({
       "bot.yaml":
-        "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n    requirements: { vision: true, minContextWindow: 128000 }\nconnectors:\n  - id: gh\n    label: GitHub\n    tools: [search]\n    endpoint: https://mcp.example.com/rpc\n",
+        "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n    requirements: { vision: true, minContextWindow: 128000 }\nconnectors:\n  - label: GitHub\n    tools: [search]\n    endpoint: https://mcp.example.com/rpc\n",
       "instructions.md": "Be helpful.",
     });
     assert.equal(result.ok, true);

@@ -331,15 +331,16 @@ export function validateConnectors(input, sink, file) {
     }
     checkKeys(
       entry,
-      ["id", "label", "description", "required", "tools", "resources", "endpoint"],
+      ["label", "description", "required", "tools", "resources", "endpoint"],
       field,
       sink,
       file,
     );
-    const id = entryId(entry.id, field, sink, file);
-    if (id === undefined) return;
+    const label = requiredString(entry.label, `${field}.label`, 200, sink, file);
+    if (label === undefined) return;
+    const id = `connector-${sha256Hex(label).slice(0, 32)}`;
     if (ids[id]) {
-      err(sink, file, field, `contains duplicate id ${id}`);
+      err(sink, file, `${field}.label`, `contains duplicate connector label ${label}`);
       return;
     }
     ids[id] = true;
@@ -395,8 +396,6 @@ export function validateConnectors(input, sink, file) {
       resources.push({ key, label, tools: resourceTools });
     });
     if (!resourcesOk) return;
-    const label = requiredString(entry.label, `${field}.label`, 200, sink, file);
-    if (label === undefined) return;
     const description = optionalString(
       entry.description,
       `${field}.description`,

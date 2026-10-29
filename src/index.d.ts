@@ -35,6 +35,7 @@ export interface BotSkill {
 }
 
 export interface BotConnector {
+  /** Deterministic parser-internal ID; not serialized or a platform UUID. */
   id: string;
   label: string;
   description: string;
@@ -54,6 +55,7 @@ export interface BotDraft {
   skills: BotSkill[];
   connectors: BotConnector[];
   triggers: Record<string, unknown>[];
+  /** IDs are deterministic parser-internal values, not platform UUIDs. */
   workspace: Array<{ id: string; path: string }>;
   githubActions: string[];
 }

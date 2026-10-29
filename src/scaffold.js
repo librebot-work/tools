@@ -125,7 +125,7 @@ export function exportBotFiles(
     workspace: (workspace ?? []).map(({ id, ...mount }) => mount),
     triggers: (triggers ?? []).map(({ id, ...trigger }) => trigger),
     githubActions: githubActions ?? [],
-    connectors: connectors ?? [],
+    connectors: (connectors ?? []).map(({ id, ...connector }) => connector),
     knowledgeSources,
   });
   files["instructions.md"] = botPrompt;

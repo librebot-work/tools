@@ -25,12 +25,13 @@ describe("export fidelity", () => {
       botPrompt: "Hi.",
       workspace: [{ id: "platform-workspace", path: "./code" }],
       triggers: [{ id: "platform-trigger", label: "Issues", kind: "github", eventTypes: ["issues.opened"], deciderInstructions: "Decide" }],
-      connectors: [{ id: "connector", label: "Connector", tools: ["search"] }],
+      connectors: [{ id: "platform-connector", label: "Connector", tools: ["search"], resources: [{ key: "scope", label: "Scope", tools: ["search"] }] }],
       knowledge: [{ id: "docs", name: "Docs", kind: "resource", url: "https://example.com/docs" }],
     });
-    assert.doesNotMatch(files["bot.yaml"], /visibility|platform-workspace|platform-trigger/);
+    assert.doesNotMatch(files["bot.yaml"], /visibility|platform-workspace|platform-trigger|platform-connector/);
     const parsed = await parseBotFiles(files);
-    assert.equal(parsed.draft.connectors[0].id, "connector");
+    assert.equal(parsed.draft.connectors[0].label, "Connector");
+    assert.equal(parsed.draft.connectors[0].resources[0].key, "scope");
     assert.equal(parsed.draft.knowledge[0].id, "docs");
     assert.equal(parsed.draft.workspace[0].path, "./code");
     assert.equal(parsed.draft.triggers[0].label, "Issues");
