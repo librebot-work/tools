@@ -20,7 +20,7 @@ export async function importSkillSource(source, { sourceBaseDir = process.cwd() 
   try {
     let locator = source.repo.source;
     if (locator.startsWith('.') || isAbsolute(locator)) locator = resolve(sourceBaseDir, locator);
-    const args = ['--yes', `skills@${SKILLS_CLI_VERSION}`, 'add', locator, '--copy', '--yes', '--agent', 'codex', ...(source.skills.length ? ['--skill', ...source.skills] : [])];
+    const args = ['--yes', `--package=skills@${SKILLS_CLI_VERSION}`, '--', 'skills', 'add', locator, '--copy', '--yes', '--agent', 'codex', ...(source.skills.length ? ['--skill', ...source.skills] : [])];
     await execute(process.platform === 'win32' ? 'npx.cmd' : 'npx', args, {
       cwd: directory, timeout: 180_000, maxBuffer: 1024 * 1024,
       env: { ...process.env, DISABLE_TELEMETRY: '1', DO_NOT_TRACK: '1', CI: '1' },

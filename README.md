@@ -110,6 +110,10 @@ librebot scaffold <dir> --name <name> [--description ...] [--force]
 librebot resolve-skills <dir> [--update] [--vendor] [--network]
 ```
 
+External skill resolution requires `npx` on PATH. It selects its pinned Skills CLI
+independently of the parent npm invocation, including when Librebot itself runs
+through `npx --package=... librebot`.
+
 ## Platform integration
 
 - The platform consumes a pinned npm bundle, currently
