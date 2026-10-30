@@ -102,8 +102,8 @@
     },
     "githubActions": {
       "type": "array",
-      "maxItems": 4,
-      "items": { "enum": ["read_issue", "push_branch", "pull_request", "comment_issue"] }
+      "maxItems": 8,
+      "items": { "enum": ["read_issue", "push_branch", "pull_request", "comment_issue", "search_issues", "read_pull_request", "read_repository", "update_issue_labels"] }
     },
     "connectors": {
       "type": "array",

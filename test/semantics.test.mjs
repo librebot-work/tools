@@ -41,6 +41,32 @@ describe("semantic cross-references", () => {
     assert.ok(messages(result).some((m) => m.includes("workspace mount")));
   });
 
+  it("accepts every declared githubActions capability with a mount", async () => {
+    const result = await base(
+      "workspace:\n  - {path: ./code}\ngithubActions: [read_issue, push_branch, pull_request, comment_issue, search_issues, read_pull_request, read_repository, update_issue_labels]\n",
+    );
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.draft.githubActions, [
+      "read_issue",
+      "push_branch",
+      "pull_request",
+      "comment_issue",
+      "search_issues",
+      "read_pull_request",
+      "read_repository",
+      "update_issue_labels",
+    ]);
+  });
+
+  it("rejects unknown and duplicate githubActions", async () => {
+    const unknown = await base("workspace:\n  - {path: ./code}\ngithubActions: [search_issue]\n");
+    assert.equal(unknown.ok, false);
+    assert.ok(messages(unknown).some((m) => m.includes("must be one of")));
+    const duplicate = await base("workspace:\n  - {path: ./code}\ngithubActions: [update_issue_labels, update_issue_labels]\n");
+    assert.equal(duplicate.ok, false);
+    assert.ok(messages(duplicate).some((m) => m.includes("duplicate")));
+  });
+
   it("rejects overlapping and duplicate mounts", async () => {
     const overlap = await base("workspace:\n  - {path: ./code}\n  - {path: ./code/deep}\n");
     assert.equal(overlap.ok, false);

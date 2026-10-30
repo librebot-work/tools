@@ -15,6 +15,10 @@ export const GITHUB_ACTIONS = [
   "push_branch",
   "pull_request",
   "comment_issue",
+  "search_issues",
+  "read_pull_request",
+  "read_repository",
+  "update_issue_labels",
 ];
 export const TRIGGER_KIND_GITHUB = "github";
 
@@ -554,7 +558,7 @@ export function validateGithubActions(input, sink, file) {
         sink,
         file,
         `githubActions[${i}]`,
-        "must be one of read_issue, push_branch, pull_request, comment_issue",
+        `must be one of ${GITHUB_ACTIONS.join(", ")}`,
       );
       return;
     }
