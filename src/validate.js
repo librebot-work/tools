@@ -19,6 +19,7 @@ export const GITHUB_ACTIONS = [
   "read_pull_request",
   "read_repository",
   "update_issue_labels",
+  "react_issue",
 ];
 export const TRIGGER_KIND_GITHUB = "github";
 
