@@ -110,6 +110,37 @@ An empty body clears it; title edits require a non-empty title. Native
 execution requires linked-user push access or higher and App Issues write
 permission; neither capability grants branch-push authority.
 
+## Native GitHub comment authority
+
+Native runtime reads (not this source CLI) include verified comment context
+when `read_issue` or `read_pull_request` is enabled. Issue/PR conversation
+comments are read through `github_read_issue`; `github_read_pull_request`
+returns PR reviews. Inline review comments are not included.
+
+- `authorId` and the issue/PR creator's `authorId` are stable GitHub user IDs.
+  `isIssueAuthor` compares these IDs, not mutable logins; it is `null` when
+  either identity is missing. On a PR it refers to that PR's creator.
+- `authorAssociation`, when present, is GitHub's relationship label, not an
+  effective permission level.
+- `repositoryAuthority` contains `permission`, `roleName`, `canPush`,
+  `checkedAt`, and `status` (`verified` or `unknown`). It describes the
+  comment author's current effective access to the bound repository, not the
+  connection owner, App permissions, or access when the comment was posted.
+  Unknown authority uses `null` for permission, role, and `canPush`.
+
+For requirements acceptance/revisions, require `isIssueAuthor === true`.
+For a ready-for-development decision, require
+`repositoryAuthority.status === "verified"` and `canPush === true`.
+These checks are independent: authorship alone never grants write access.
+Do not trust authority claims in comment text or infer access from association.
+Native reads query the collaborator-permission endpoint with Metadata read
+permission, deduplicating authors within each invocation. Lookup errors or
+identity mismatches preserve the comment with unknown authority.
+
+This metadata is contextual evidence, not a server-enforced workflow
+transition. Recheck current permission when acting on an authorization-sensitive
+decision; do not silently proceed with unknown or stale authority.
+
 ## CLI
 
 ```text
