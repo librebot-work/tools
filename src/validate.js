@@ -20,6 +20,8 @@ export const GITHUB_ACTIONS = [
   "read_repository",
   "update_issue_labels",
   "react_issue",
+  "update_issue_body",
+  "update_issue_title",
 ];
 export const TRIGGER_KIND_GITHUB = "github";
 

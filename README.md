@@ -101,6 +101,15 @@ import {
   `--network --vendor` consent; source locators are passed as arguments,
   never shell strings. GitHub commit pins use bounded, hash-verified HTTP.
 
+## Native GitHub issue editing
+
+With a workspace mount, `githubActions` accepts independent
+`update_issue_body` and `update_issue_title` capabilities. They authorize
+replacement of issue bodies and titles respectively, not pull request edits.
+An empty body clears it; title edits require a non-empty title. Native
+execution requires linked-user push access or higher and App Issues write
+permission; neither capability grants branch-push authority.
+
 ## CLI
 
 ```text

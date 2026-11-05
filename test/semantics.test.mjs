@@ -43,7 +43,7 @@ describe("semantic cross-references", () => {
 
   it("accepts every declared githubActions capability with a mount", async () => {
     const result = await base(
-      "workspace:\n  - {path: ./code}\ngithubActions: [read_issue, push_branch, pull_request, comment_issue, search_issues, read_pull_request, read_repository, update_issue_labels, react_issue]\n",
+      "workspace:\n  - {path: ./code}\ngithubActions: [read_issue, push_branch, pull_request, comment_issue, search_issues, read_pull_request, read_repository, update_issue_labels, react_issue, update_issue_body, update_issue_title]\n",
     );
     assert.equal(result.ok, true);
     assert.deepEqual(result.draft.githubActions, [
@@ -56,6 +56,8 @@ describe("semantic cross-references", () => {
       "read_repository",
       "update_issue_labels",
       "react_issue",
+      "update_issue_body",
+      "update_issue_title",
     ]);
   });
 
