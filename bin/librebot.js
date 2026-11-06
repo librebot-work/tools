@@ -135,6 +135,9 @@ async function cmdPreview(dir, json) {
   if (draft.githubActions.length > 0) {
     console.log(`githubActions: ${draft.githubActions.join(", ")}`);
   }
+  if (draft.gitlabActions.length > 0) {
+    console.log(`gitlabActions: ${draft.gitlabActions.join(", ")}`);
+  }
   if (result.lock) {
     console.log(`skill lock: ${result.lock.resolved.length} sources pinned`);
   }

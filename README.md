@@ -8,7 +8,7 @@ build step, hand-written types in `src/index.d.ts`.
 
 ```text
 bot.yaml                 # identity, description, format version, model roles,
-                         # workspace mounts, triggers, githubActions, connectors
+                         # workspace mounts, triggers, githubActions, gitlabActions, connectors
 instructions.md          # main prompt (-> BotDraft.botPrompt)
 
 knowledge/
@@ -110,6 +110,18 @@ An empty body clears it; title edits require a non-empty title. Native
 execution requires linked-user push access or higher and App Issues write
 permission; neither capability grants branch-push authority.
 
+## Native GitLab actions
+
+`gitlabActions` requires at least one workspace mount and accepts:
+`read_issue`, `push_branch`, `merge_request`, `comment_issue`, `search_issues`,
+`read_merge_request`, `read_repository`, `update_issue_labels`, `react_issue`,
+`update_issue_body`, and `update_issue_title`. GitHub action names
+`pull_request` and `read_pull_request` are not GitLab capabilities.
+Omitted declarations default to an empty list. Duplicates, unknown names,
+non-array values, and lists longer than 11 entries are invalid. Triggers
+remain GitHub-only; declaring GitLab actions does not add GitLab triggers.
+
+
 ## Native GitHub comment authority
 
 Native runtime reads (not this source CLI) include verified comment context
@@ -156,13 +168,16 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes a pinned npm bundle, currently
-  `services/shared/librebot-tools-0.1.0.tgz`, so platform CI and images do not
-  need this separate Git checkout. From this repository, refresh it with
+- The platform consumes the locally patched prerelease
+  `services/shared/librebot-tools-0.2.6-gitlab.0.tgz`, packed from this CLI
+  source checkout with GitLab source-format support. This is not a published
+  npm release or a claim that any upstream commit contains these changes.
+  Platform CI and images do not need this separate Git checkout. Refresh with
   `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
-  then refresh the platform lockfile from that platform checkout.
-  Publishing this package to a public registry can replace the bundled
-  dependency without changing its API.
+  then update the platform dependency and lockfile using
+  `npm install --workspace services.shared ./services/shared/librebot-tools-0.2.6-gitlab.0.tgz`.
+  Authoring environments must receive this exact local bundle rather than
+  substituting an older public CLI pin, `main`, or `latest`.
 - Ingestion: `parseBotFiles(tree)` -> persist `assets` bytes to GCS, fill
   the platform `BotKnowledge` path/storage fields, materialize `skillFiles`
   per skill, then run platform validation. `draft` carries no `tools` field.

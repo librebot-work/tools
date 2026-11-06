@@ -23,6 +23,19 @@ export const GITHUB_ACTIONS = [
   "update_issue_body",
   "update_issue_title",
 ];
+export const GITLAB_ACTIONS = [
+  "read_issue",
+  "push_branch",
+  "merge_request",
+  "comment_issue",
+  "search_issues",
+  "read_merge_request",
+  "read_repository",
+  "update_issue_labels",
+  "react_issue",
+  "update_issue_body",
+  "update_issue_title",
+];
 export const TRIGGER_KIND_GITHUB = "github";
 
 const ENTRY_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -567,6 +580,33 @@ export function validateGithubActions(input, sink, file) {
     }
     if (seen[entry] === true) {
       err(sink, file, "githubActions", `contains duplicate ${entry}`);
+      return;
+    }
+    seen[entry] = true;
+    out.push(entry);
+  });
+  return out;
+}
+
+export function validateGitlabActions(input, sink, file) {
+  if (input === undefined) return [];
+  if (!Array.isArray(input)) {
+    err(sink, file, "gitlabActions", "must be an array");
+    return [];
+  }
+  if (input.length > GITLAB_ACTIONS.length) {
+    err(sink, file, "gitlabActions", "has too many entries");
+    return [];
+  }
+  const seen = {};
+  const out = [];
+  input.forEach((entry, i) => {
+    if (typeof entry !== "string" || !GITLAB_ACTIONS.includes(entry)) {
+      err(sink, file, `gitlabActions[${i}]`, `must be one of ${GITLAB_ACTIONS.join(", ")}`);
+      return;
+    }
+    if (seen[entry] === true) {
+      err(sink, file, "gitlabActions", `contains duplicate ${entry}`);
       return;
     }
     seen[entry] = true;

@@ -7,4 +7,5 @@ modelRoles:
 workspace: []
 triggers: []
 githubActions: []
+gitlabActions: []
 connectors: []

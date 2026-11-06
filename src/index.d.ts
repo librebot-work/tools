@@ -58,6 +58,7 @@ export interface BotDraft {
   /** IDs are deterministic parser-internal values, not platform UUIDs. */
   workspace: Array<{ id: string; path: string }>;
   githubActions: string[];
+  gitlabActions: string[];
 }
 
 export interface KnowledgeAsset {

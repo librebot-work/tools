@@ -17,6 +17,19 @@ describe("export fidelity", () => {
     assert.deepEqual(roundtrip.draft, initial.draft);
   });
 
+  it("round-trips GitLab actions without changing GitHub actions or triggers", async () => {
+    const initial = await parseBotFiles({
+      ...scaffoldBotFiles({ name: "GitLab" }),
+      "bot.yaml": "formatVersion: 1\nname: GitLab\ndescription: D\nmodelRoles:\n  - {role: default, label: Main}\nworkspace:\n  - {path: ./code}\ngitlabActions: [merge_request, read_merge_request, update_issue_title]\ngithubActions: [pull_request]\n",
+    });
+    const exported = exportBotFiles(initial.draft);
+    const roundtrip = await parseBotFiles(exported);
+    assert.deepEqual(roundtrip.draft.gitlabActions, ["merge_request", "read_merge_request", "update_issue_title"]);
+    assert.deepEqual(roundtrip.draft.githubActions, ["pull_request"]);
+    assert.deepEqual(roundtrip.draft, initial.draft);
+    assert.deepEqual(roundtrip.draft.triggers, []);
+  });
+
   it("omits platform metadata while retaining semantic identifiers", async () => {
     const files = exportBotFiles({
       name: "T",

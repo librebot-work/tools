@@ -105,6 +105,11 @@
       "maxItems": 11,
       "items": { "enum": ["read_issue", "push_branch", "pull_request", "comment_issue", "search_issues", "read_pull_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title"] }
     },
+    "gitlabActions": {
+      "type": "array",
+      "maxItems": 11,
+      "items": { "enum": ["read_issue", "push_branch", "merge_request", "comment_issue", "search_issues", "read_merge_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title"] }
+    },
     "connectors": {
       "type": "array",
       "maxItems": 50,

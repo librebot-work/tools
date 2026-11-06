@@ -46,5 +46,5 @@ export {
 } from "./scaffold.js";
 export { SCHEMA_VERSIONS, loadSchema } from "./schema.js";
 export { canonicalJson, sha256Hex, toBytes } from "./util.js";
-export { FORMAT_VERSION, MODEL_ROLES, GITHUB_ACTIONS, TRIGGER_KIND_GITHUB } from "./validate.js";
+export { FORMAT_VERSION, MODEL_ROLES, GITHUB_ACTIONS, GITLAB_ACTIONS, TRIGGER_KIND_GITHUB } from "./validate.js";
 export { validateKnowledgeSources, validateRequirements } from "./validate.js";

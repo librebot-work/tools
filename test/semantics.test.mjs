@@ -70,6 +70,35 @@ describe("semantic cross-references", () => {
     assert.ok(messages(duplicate).some((m) => m.includes("duplicate")));
   });
 
+  it("accepts all GitLab actions and keeps provider declarations independent", async () => {
+    const actions = ["read_issue", "push_branch", "merge_request", "comment_issue", "search_issues", "read_merge_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title"];
+    const result = await base(`workspace:\n  - {path: ./code}\ngithubActions: [pull_request]\ngitlabActions: ${JSON.stringify(actions)}\n`);
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.draft.gitlabActions, actions);
+    assert.deepEqual(result.draft.githubActions, ["pull_request"]);
+    const absent = await base("");
+    assert.deepEqual(absent.draft.gitlabActions, []);
+  });
+
+  it("rejects GitLab action shape, membership, duplicates, limits, and missing mounts", async () => {
+    for (const [value, message] of [
+      ["null", "must be an array"],
+      ["read_issue", "must be an array"],
+      ["[pull_request]", "must be one of"],
+      ["[read_pull_request]", "must be one of"],
+      ["[1]", "must be one of"],
+      ["[read_issue, read_issue]", "duplicate"],
+      [JSON.stringify(Array(12).fill("read_issue")), "too many"],
+    ]) {
+      const result = await base(`workspace:\n  - {path: ./code}\ngitlabActions: ${value}\n`);
+      assert.equal(result.ok, false, value);
+      assert.ok(result.errors.some((error) => error.field.startsWith("gitlabActions") && error.message.includes(message)), value);
+    }
+    const missing = await base("gitlabActions: [read_issue]\n");
+    assert.equal(missing.ok, false);
+    assert.ok(missing.errors.some((error) => error.field === "gitlabActions" && error.message.includes("workspace mount")));
+  });
+
   it("rejects overlapping and duplicate mounts", async () => {
     const overlap = await base("workspace:\n  - {path: ./code}\n  - {path: ./code/deep}\n");
     assert.equal(overlap.ok, false);

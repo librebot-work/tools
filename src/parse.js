@@ -16,6 +16,7 @@ import {
   requiredString,
   validateConnectors,
   validateGithubActions,
+  validateGitlabActions,
   validateKnowledgeSources,
   validateModelRoles,
   validateTriggerDefinitions,
@@ -39,6 +40,7 @@ const TOP_LEVEL_KEYS = [
   "workspace",
   "triggers",
   "githubActions",
+  "gitlabActions",
   "connectors",
   "knowledgeSources",
 ];
@@ -283,6 +285,7 @@ export async function validateFiles(input) {
   const workspace = validateWorkspaceMounts(botDoc.workspace, sink, FILE_BOT_YAML);
   const triggers = validateTriggerDefinitions(botDoc.triggers, sink, FILE_BOT_YAML);
   const githubActions = validateGithubActions(botDoc.githubActions, sink, FILE_BOT_YAML);
+  const gitlabActions = validateGitlabActions(botDoc.gitlabActions, sink, FILE_BOT_YAML);
   const connectors = validateConnectors(botDoc.connectors, sink, FILE_BOT_YAML);
 
   for (const trigger of triggers) {
@@ -301,6 +304,13 @@ export async function validateFiles(input) {
     errors.push({
       file: FILE_BOT_YAML,
       field: "githubActions",
+      message: "require at least one declared workspace mount",
+    });
+  }
+  if (gitlabActions.length > 0 && workspace.length === 0) {
+    errors.push({
+      file: FILE_BOT_YAML,
+      field: "gitlabActions",
       message: "require at least one declared workspace mount",
     });
   }
@@ -575,6 +585,7 @@ export async function validateFiles(input) {
     triggers,
     workspace,
     githubActions,
+    gitlabActions,
   };
   // Byte length (UTF-8), exactly like the platform: char counts would let
   // multibyte-heavy drafts pass locally then fail the 750 KB ingest cap.

@@ -38,6 +38,7 @@ export function scaffoldBotFiles(input) {
     workspace: [],
     triggers: [],
     githubActions: [],
+    gitlabActions: [],
     connectors: [],
   };
   return {
@@ -78,6 +79,7 @@ export function exportBotFiles(
     workspace,
     triggers,
     githubActions,
+    gitlabActions,
     connectors,
   } = draft;
   if (typeof name !== "string" || typeof botPrompt !== "string") {
@@ -125,6 +127,7 @@ export function exportBotFiles(
     workspace: (workspace ?? []).map(({ id, ...mount }) => mount),
     triggers: (triggers ?? []).map(({ id, ...trigger }) => trigger),
     githubActions: githubActions ?? [],
+    gitlabActions: gitlabActions ?? [],
     connectors: (connectors ?? []).map(({ id, ...connector }) => connector),
     knowledgeSources,
   });
