@@ -10,47 +10,22 @@ import { sha256Hex } from "./util.js";
 
 export const FORMAT_VERSION = 1;
 export const MODEL_ROLES = ["default", "smol", "slow", "plan"];
-export const GITHUB_ACTIONS = [
-  "read_issue",
-  "push_branch",
-  "pull_request",
-  "comment_issue",
-  "search_issues",
-  "read_pull_request",
-  "read_repository",
-  "update_issue_labels",
-  "react_issue",
-  "update_issue_body",
-  "update_issue_title",
+export const REPO_CAPABILITIES = [
+  "read_issue", "push_branch", "propose_change", "comment_issue",
+  "search_issues", "read_change_request", "read_repository",
+  "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title",
 ];
-export const GITLAB_ACTIONS = [
-  "read_issue",
-  "push_branch",
-  "merge_request",
-  "comment_issue",
-  "search_issues",
-  "read_merge_request",
-  "read_repository",
-  "update_issue_labels",
-  "react_issue",
-  "update_issue_body",
-  "update_issue_title",
-];
-export const TRIGGER_KIND_GITHUB = "github";
-export const TRIGGER_KIND_GITLAB = "gitlab";
-export const GITLAB_TRIGGER_EVENT_TYPES = [
-  "issues.open", "issues.update", "issues.close", "issues.reopen",
-  "merge_request.open", "merge_request.update", "merge_request.close",
-  "merge_request.reopen", "merge_request.merge", "merge_request.approved",
-  "merge_request.unapproved", "merge_request.approval", "merge_request.unapproval",
-  "note.issue.create", "note.issue.update",
-  "note.merge_request.create", "note.merge_request.update", "push",
+export const GITREPO_TRIGGER_EVENT_TYPES = [
+  "issue.opened", "issue.updated", "issue.closed", "issue.reopened",
+  "issue.comment.created", "issue.comment.updated",
+  "change_request.opened", "change_request.updated", "change_request.closed",
+  "change_request.reopened", "change_request.merged", "change_request.commits_updated",
+  "change_request.comment.created", "change_request.comment.updated",
+  "change_request.approval_changed", "repository.pushed",
 ];
 
 const ENTRY_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const INPUT_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
-const REPO_FULL_NAME_RE = /^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
-const GITLAB_PROJECT_PATH_RE = /^[A-Za-z0-9_.-]{1,100}(?:\/[A-Za-z0-9_.-]{1,100})+$/;
 const MOUNT_SEGMENT_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const EVENT_TYPE_RE = /^[A-Za-z0-9._-]+$/;
 const REF_RE = /^[A-Za-z0-9._/][A-Za-z0-9._/-]*$/;
@@ -533,10 +508,16 @@ export function validateWorkspaceMounts(input, sink, file) {
       err(sink, file, field, "must be an object");
       return;
     }
-    checkKeys(entry, ["path"], field, sink, file);
+    checkKeys(entry, ["key", "label", "path"], field, sink, file);
+    const key = entryId(entry.key, `${field}.key`, sink, file);
+    const label = optionalText(entry.label, `${field}.label`, 100, sink, file);
     const path = normalizeMountPath(entry.path, sink, file);
-    if (path === undefined) return;
-    mounts.push({ id: `workspace-${sha256Hex(path).slice(0, 32)}`, path });
+    if (path === undefined || key === undefined) return;
+    if (mounts.some((mount) => mount.key === key)) {
+      err(sink, file, `${field}.key`, `contains duplicate key ${key}`);
+      return;
+    }
+    mounts.push({ key, ...(label === undefined ? {} : { label }), path });
   });
   const paths = {};
   for (const mount of mounts) {
@@ -556,7 +537,7 @@ export function validateWorkspaceMounts(input, sink, file) {
           sink,
           file,
           "workspace",
-          `mounts ${mounts[i].id} and ${mounts[j].id} overlap`,
+          `mounts ${mounts[i].key} and ${mounts[j].key} overlap`,
         );
         i = mounts.length;
         break;
@@ -566,61 +547,41 @@ export function validateWorkspaceMounts(input, sink, file) {
   return mounts;
 }
 
-export function validateGithubActions(input, sink, file) {
+export function validateActions(input, sink, file) {
   if (input === undefined) return [];
-  if (!Array.isArray(input)) {
-    err(sink, file, "githubActions", "must be an array");
+  if (!Array.isArray(input) || input.length > 20) {
+    err(sink, file, "actions", "must be an array of at most 20 groups");
     return [];
   }
-  if (input.length > GITHUB_ACTIONS.length) {
-    err(sink, file, "githubActions", "has too many entries");
-    return [];
-  }
-  const seen = {};
+  const seen = new Set();
   const out = [];
   input.forEach((entry, i) => {
-    if (typeof entry !== "string" || !GITHUB_ACTIONS.includes(entry)) {
-      err(
-        sink,
-        file,
-        `githubActions[${i}]`,
-        `must be one of ${GITHUB_ACTIONS.join(", ")}`,
-      );
+    const field = `actions[${i}]`;
+    if (!isRecord(entry)) {
+      err(sink, file, field, "must be an object");
       return;
     }
-    if (seen[entry] === true) {
-      err(sink, file, "githubActions", `contains duplicate ${entry}`);
+    checkKeys(entry, ["key", "kind", "label", "capabilities"], field, sink, file);
+    const key = entryId(entry.key, `${field}.key`, sink, file);
+    const label = optionalText(entry.label, `${field}.label`, 100, sink, file);
+    if (entry.kind !== "gitrepo") err(sink, file, `${field}.kind`, "must be gitrepo");
+    if (key === undefined) return;
+    if (seen.has(key)) err(sink, file, `${field}.key`, `contains duplicate key ${key}`);
+    seen.add(key);
+    if (!Array.isArray(entry.capabilities) || entry.capabilities.length === 0 ||
+        entry.capabilities.length > REPO_CAPABILITIES.length) {
+      err(sink, file, `${field}.capabilities`, "must be a non-empty array of capabilities");
       return;
     }
-    seen[entry] = true;
-    out.push(entry);
-  });
-  return out;
-}
-
-export function validateGitlabActions(input, sink, file) {
-  if (input === undefined) return [];
-  if (!Array.isArray(input)) {
-    err(sink, file, "gitlabActions", "must be an array");
-    return [];
-  }
-  if (input.length > GITLAB_ACTIONS.length) {
-    err(sink, file, "gitlabActions", "has too many entries");
-    return [];
-  }
-  const seen = {};
-  const out = [];
-  input.forEach((entry, i) => {
-    if (typeof entry !== "string" || !GITLAB_ACTIONS.includes(entry)) {
-      err(sink, file, `gitlabActions[${i}]`, `must be one of ${GITLAB_ACTIONS.join(", ")}`);
-      return;
-    }
-    if (seen[entry] === true) {
-      err(sink, file, "gitlabActions", `contains duplicate ${entry}`);
-      return;
-    }
-    seen[entry] = true;
-    out.push(entry);
+    const capabilities = new Set();
+    entry.capabilities.forEach((capability, j) => {
+      if (!REPO_CAPABILITIES.includes(capability)) {
+        err(sink, file, `${field}.capabilities[${j}]`, "must be a supported repository capability");
+      } else if (capabilities.has(capability)) {
+        err(sink, file, `${field}.capabilities`, "contains duplicates");
+      } else capabilities.add(capability);
+    });
+    out.push({ key, kind: "gitrepo", ...(label === undefined ? {} : { label }), capabilities: [...capabilities] });
   });
   return out;
 }
@@ -739,11 +700,11 @@ export function validateTriggerDefinitions(input, sink, file) {
     checkKeys(
       entry,
       [
+        "key",
         "label",
         "description",
         "kind",
         "eventTypes",
-        "repository",
         "inputs",
         "deciderRole",
         "deciderInstructions",
@@ -754,8 +715,8 @@ export function validateTriggerDefinitions(input, sink, file) {
       file,
     );
     let ok = true;
-    if (entry.kind !== TRIGGER_KIND_GITHUB && entry.kind !== TRIGGER_KIND_GITLAB) {
-      err(sink, file, `${field}.kind`, "must be github or gitlab");
+    if (entry.kind !== "gitrepo") {
+      err(sink, file, `${field}.kind`, "must be gitrepo");
       ok = false;
     }
     if (
@@ -786,8 +747,8 @@ export function validateTriggerDefinitions(input, sink, file) {
           return;
         }
         const normalized = type.trim();
-        if (entry.kind === TRIGGER_KIND_GITLAB && !GITLAB_TRIGGER_EVENT_TYPES.includes(normalized)) {
-          err(sink, file, `${field}.eventTypes[${j}]`, "must be a supported GitLab event type");
+        if (!GITREPO_TRIGGER_EVENT_TYPES.includes(normalized)) {
+          err(sink, file, `${field}.eventTypes[${j}]`, "must be a supported semantic repository event type");
           ok = false;
           return;
         }
@@ -810,14 +771,15 @@ export function validateTriggerDefinitions(input, sink, file) {
     );
     if (label === undefined || deciderInstructions === undefined) ok = false;
     if (!ok) return;
-    const id = `trigger-${sha256Hex(label).slice(0, 32)}`;
-    if (seen[id]) {
-      err(sink, file, `${field}.label`, `contains duplicate trigger label ${label}`);
+    const key = entryId(entry.key, `${field}.key`, sink, file);
+    if (key === undefined) return;
+    if (seen[key]) {
+      err(sink, file, `${field}.key`, `contains duplicate trigger key ${key}`);
       return;
     }
-    seen[id] = true;
+    seen[key] = true;
     const definition = {
-      id,
+      key,
       label,
       kind: entry.kind,
       eventTypes,
@@ -831,52 +793,6 @@ export function validateTriggerDefinitions(input, sink, file) {
       file,
     );
     if (description !== undefined) definition.description = description;
-    if (entry.repository !== undefined) {
-      if (!isRecord(entry.repository)) {
-        err(sink, file, `${field}.repository`, "must be an object");
-        return;
-      }
-      checkKeys(entry.repository, ["mode", "fullName"], `${field}.repository`, sink, file);
-      const mode = entry.repository.mode;
-      if (mode !== "any" && mode !== "pinned") {
-        err(sink, file, `${field}.repository.mode`, "must be any or pinned");
-        return;
-      }
-      const fullName = optionalText(
-        entry.repository.fullName,
-        `${field}.repository.fullName`,
-        entry.kind === TRIGGER_KIND_GITLAB ? 1000 : 201,
-        sink,
-        file,
-      );
-      const validFullName = (value) => entry.kind === TRIGGER_KIND_GITLAB
-        ? GITLAB_PROJECT_PATH_RE.test(value) && value.split("/").every((segment) => segment !== "." && segment !== "..")
-        : REPO_FULL_NAME_RE.test(value);
-      if (mode === "pinned") {
-        if (fullName === undefined || !validFullName(fullName)) {
-          err(
-            sink,
-            file,
-            `${field}.repository.fullName`,
-            "must be a full repository or project path",
-          );
-          return;
-        }
-        definition.repository = { mode, fullName };
-      } else {
-        if (fullName !== undefined && !validFullName(fullName)) {
-          err(
-            sink,
-            file,
-            `${field}.repository.fullName`,
-            "must be a full repository or project path",
-          );
-          return;
-        }
-        definition.repository =
-          fullName === undefined ? { mode } : { mode, fullName };
-      }
-    }
     if (entry.inputs !== undefined) {
       if (!Array.isArray(entry.inputs) || entry.inputs.length > 50) {
         err(

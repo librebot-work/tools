@@ -17,15 +17,14 @@ describe("export fidelity", () => {
     assert.deepEqual(roundtrip.draft, initial.draft);
   });
 
-  it("round-trips GitLab actions without changing GitHub actions or triggers", async () => {
+  it("round-trips portable action groups independently of checkout declarations", async () => {
     const initial = await parseBotFiles({
       ...scaffoldBotFiles({ name: "GitLab" }),
-      "bot.yaml": "formatVersion: 1\nname: GitLab\ndescription: D\nmodelRoles:\n  - {role: default, label: Main}\nworkspace:\n  - {path: ./code}\ngitlabActions: [merge_request, read_merge_request, update_issue_title]\ngithubActions: [pull_request]\n",
+      "bot.yaml": "formatVersion: 1\nname: GitLab\ndescription: D\nmodelRoles:\n  - {role: default, label: Main}\nworkspace:\n  - {key: source, path: ./code}\nactions:\n  - {key: repo, kind: gitrepo, capabilities: [propose_change, read_change_request, update_issue_title]}\n",
     });
     const exported = exportBotFiles(initial.draft);
     const roundtrip = await parseBotFiles(exported);
-    assert.deepEqual(roundtrip.draft.gitlabActions, ["merge_request", "read_merge_request", "update_issue_title"]);
-    assert.deepEqual(roundtrip.draft.githubActions, ["pull_request"]);
+    assert.deepEqual(roundtrip.draft.actions, [{ key: "repo", kind: "gitrepo", capabilities: ["propose_change", "read_change_request", "update_issue_title"] }]);
     assert.deepEqual(roundtrip.draft, initial.draft);
     assert.deepEqual(roundtrip.draft.triggers, []);
   });
@@ -36,21 +35,32 @@ describe("export fidelity", () => {
       description: "D",
       visibility: "public",
       botPrompt: "Hi.",
-      workspace: [{ id: "platform-workspace", path: "./code" }],
-      triggers: [{ id: "platform-trigger", label: "Issues", kind: "github", eventTypes: ["issues.opened"], deciderInstructions: "Decide" }],
+      workspace: [{ key: "source", label: "Source", path: "./code" }],
+      triggers: [{ key: "issues", label: "Issues", kind: "gitrepo", eventTypes: ["issue.opened"], deciderInstructions: "Decide" }],
       connectors: [{ id: "platform-connector", label: "Connector", tools: ["search"], resources: [{ key: "scope", label: "Scope", tools: ["search"] }] }],
       knowledge: [{ id: "docs", name: "Docs", kind: "resource", url: "https://example.com/docs" }],
     });
-    assert.doesNotMatch(files["bot.yaml"], /visibility|platform-workspace|platform-trigger|platform-connector/);
+    assert.doesNotMatch(files["bot.yaml"], /visibility|platform-connector/);
     const parsed = await parseBotFiles(files);
     assert.equal(parsed.draft.connectors[0].label, "Connector");
     assert.equal(parsed.draft.connectors[0].resources[0].key, "scope");
     assert.equal(parsed.draft.knowledge[0].id, "docs");
     assert.equal(parsed.draft.workspace[0].path, "./code");
+    assert.equal(parsed.draft.workspace[0].key, "source");
+    assert.equal(parsed.draft.triggers[0].key, "issues");
     assert.equal(parsed.draft.triggers[0].label, "Issues");
     assert.equal("visibility" in parsed.draft, false);
     const again = await parseBotFiles(exportBotFiles(parsed.draft));
     assert.deepEqual(again.draft, parsed.draft);
+    const edited = structuredClone(parsed.draft);
+    edited.workspace[0].label = "Renamed source";
+    edited.workspace[0].path = "./renamed";
+    edited.triggers[0].label = "Renamed trigger";
+    const renamed = await parseBotFiles(exportBotFiles(edited));
+    assert.equal(renamed.draft.workspace[0].key, "source");
+    assert.equal(renamed.draft.workspace[0].path, "./renamed");
+    assert.equal(renamed.draft.triggers[0].key, "issues");
+    assert.equal(renamed.draft.triggers[0].label, "Renamed trigger");
   });
 
   it("round-trips resource/repo knowledge through knowledgeSources", async () => {
@@ -74,7 +84,7 @@ describe("export fidelity", () => {
       connectors: [],
       triggers: [],
       workspace: [],
-      githubActions: [],
+      actions: [],
     };
     const exported = exportBotFiles(draft);
     assert.ok(!Object.keys(exported).some((k) => k.startsWith("knowledge/") && k !== "knowledge/README.md"));

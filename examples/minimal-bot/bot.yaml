@@ -6,6 +6,5 @@ modelRoles:
     label: Main
 workspace: []
 triggers: []
-githubActions: []
-gitlabActions: []
+actions: []
 connectors: []

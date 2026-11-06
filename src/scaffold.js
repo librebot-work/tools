@@ -37,8 +37,7 @@ export function scaffoldBotFiles(input) {
     modelRoles: [{ role: "default", label: "Main" }],
     workspace: [],
     triggers: [],
-    githubActions: [],
-    gitlabActions: [],
+    actions: [],
     connectors: [],
   };
   return {
@@ -78,8 +77,7 @@ export function exportBotFiles(
     modelRoles,
     workspace,
     triggers,
-    githubActions,
-    gitlabActions,
+    actions,
     connectors,
   } = draft;
   if (typeof name !== "string" || typeof botPrompt !== "string") {
@@ -124,10 +122,9 @@ export function exportBotFiles(
     name,
     description: description ?? "",
     modelRoles: modelRoles ?? [{ role: "default", label: "Main" }],
-    workspace: (workspace ?? []).map(({ id, ...mount }) => mount),
-    triggers: (triggers ?? []).map(({ id, ...trigger }) => trigger),
-    githubActions: githubActions ?? [],
-    gitlabActions: gitlabActions ?? [],
+    workspace: workspace ?? [],
+    triggers: triggers ?? [],
+    actions: actions ?? [],
     connectors: (connectors ?? []).map(({ id, ...connector }) => connector),
     knowledgeSources,
   });

@@ -8,7 +8,7 @@ build step, hand-written types in `src/index.d.ts`.
 
 ```text
 bot.yaml                 # identity, description, format version, model roles,
-                         # workspace mounts, triggers, githubActions, gitlabActions, connectors
+                         # workspace mounts, triggers, actions, connectors
 instructions.md          # main prompt (-> BotDraft.botPrompt)
 
 knowledge/
@@ -32,11 +32,11 @@ Rules:
 
 - `bot.yaml` keys are strict: unknown fields are errors. `tools` was
   removed — builtin tools are always on, never declared.
-- Visibility is platform-managed and is not a source field. Workspace mounts
-  declare `path` without an `id`; triggers and connectors declare unique
-  `label` values without an `id`. The parser derives deterministic internal
-  declaration IDs from the normalized path or label; these are not platform
-  IDs and are never exported. Knowledge source IDs remain portable references.
+- Visibility is platform-managed and is not a source field. Workspace mounts,
+  action groups, and triggers declare explicit stable `key` values. Mounts have
+  `path`, actions and triggers use common `kind: gitrepo`; provider and target
+  bindings belong to instances. Connectors retain unique labels and platform
+  identities. Knowledge source IDs remain portable references.
 - `modelRoles[]` accepts optional `requirements: { tools?, vision?,
   reasoning?, minContextWindow? }`, validated and preserved end to end.
 - `knowledge/README.md` is the index, not an entry. Every other file under
@@ -101,47 +101,48 @@ import {
   `--network --vendor` consent; source locators are passed as arguments,
   never shell strings. GitHub commit pins use bounded, hash-verified HTTP.
 
-## Native GitHub issue editing
+## Portable repository declarations
 
-With a workspace mount, `githubActions` accepts independent
-`update_issue_body` and `update_issue_title` capabilities. They authorize
-replacement of issue bodies and titles respectively, not pull request edits.
-An empty body clears it; title edits require a non-empty title. Native
-execution requires linked-user push access or higher and App Issues write
-permission; neither capability grants branch-push authority.
+Workspace slots, action groups, and triggers have independent explicit stable
+`key` values (up to 64 characters, letters/digits followed by letters/digits,
+periods, underscores, or hyphens). Keys are unique within each section.
 
-## Native GitLab actions
+```yaml
+workspace:
+  - key: source
+    label: Source checkout
+    path: ./repo
+actions:
+  - key: issues
+    kind: gitrepo
+    capabilities: [read_issue, comment_issue, propose_change]
+triggers:
+  - key: new-issue
+    label: New issue
+    kind: gitrepo
+    eventTypes: [issue.opened]
+    deciderInstructions: Decide whether this issue needs assistance.
+```
 
-`gitlabActions` requires at least one workspace mount and accepts:
-`read_issue`, `push_branch`, `merge_request`, `comment_issue`, `search_issues`,
-`read_merge_request`, `read_repository`, `update_issue_labels`, `react_issue`,
-`update_issue_body`, and `update_issue_title`. GitHub action names
-`pull_request` and `read_pull_request` are not GitLab capabilities.
-Omitted declarations default to an empty list. Duplicates, unknown names,
-non-array values, and lists longer than 11 entries are invalid. Triggers
-remain GitHub-only; declaring GitLab actions does not add GitLab triggers.
+Action capabilities are `read_issue`, `push_branch`, `propose_change`,
+`comment_issue`, `search_issues`, `read_change_request`, `read_repository`,
+`update_issue_labels`, `react_issue`, `update_issue_body`, and `update_issue_title`.
+Groups require at least one capability; at most 20 groups are accepted.
+API-only actions do not require workspace. Platform bindings select the provider,
+connection, numeric repository identity, and optional checkout independently.
+`push_branch` requires a bound matching checkout. Native `repo_*` tools select
+the declared group through required `action`, never a freeform repository.
 
-
-## Native GitHub comment authority
-
-Native runtime reads (not this source CLI) include verified comment context
-when `read_issue` or `read_pull_request` is enabled. Issue/PR conversation
-comments are read through `github_read_issue`; `github_read_pull_request`
-returns PR reviews. Inline review comments are not included.
-
-### GitLab trigger declarations
-
-Triggers accept `kind: gitlab` with native events: `issues.open/update/close/reopen`,
-`merge_request.open/update/close/reopen/merge/approved/unapproved/approval/unapproval`,
-`note.issue.create/update`, `note.merge_request.create/update`, and `push`.
-Each slash-separated suffix above denotes a separate event ID, for example
-`merge_request.open`. GitHub event aliases such as `issues.opened` are rejected
-for GitLab. GitHub behavior and label-derived declaration IDs remain unchanged.
-Pinned GitLab project paths support nested groups, for example
-`repository: {mode: pinned, fullName: group/subgroup/project}`.
-Declarations carry no credentials and do not install webhooks: bind the project
-and a live PAT connection in platform setup. Keep PATs and webhook tokens out
-of bot source.
+Semantic trigger events are `issue.opened`, `issue.updated`, `issue.closed`,
+`issue.reopened`, `issue.comment.created`, `issue.comment.updated`,
+`change_request.opened`, `change_request.updated`, `change_request.closed`,
+`change_request.reopened`, `change_request.merged`,
+`change_request.commits_updated`, `change_request.comment.created`,
+`change_request.comment.updated`, `change_request.approval_changed`, and
+`repository.pushed`. Repository selection belongs only in instance bindings.
+Legacy provider-specific action fields/kinds, derived IDs, and pinned trigger
+repositories are rejected. Messaging declarations are not implemented and are
+rejected by the runtime/schema.
 
 - `authorId` and the issue/PR creator's `authorId` are stable GitHub user IDs.
   `isIssueAuthor` compares these IDs, not mutable logins; it is `null` when
@@ -182,14 +183,13 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes the locally patched prerelease
-  `services/shared/librebot-tools-0.2.6-gitlab.1.tgz`, packed from this CLI
-  source checkout with GitLab source-format support. This is not a published
-  npm release or a claim that any upstream commit contains these changes.
+- The platform consumes `services/shared/librebot-tools-0.3.0.tgz`, packed from
+  this source checkout. This is not a published npm release or a claim that an
+  upstream commit contains these changes.
   Platform CI and images do not need this separate Git checkout. Refresh with
   `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
   then update the platform dependency and lockfile using
-  `npm install --workspace services.shared ./services/shared/librebot-tools-0.2.6-gitlab.1.tgz`.
+  `npm install --workspace services.shared ./services/shared/librebot-tools-0.3.0.tgz`.
   Authoring environments must receive this exact local bundle rather than
   substituting an older public CLI pin, `main`, or `latest`.
 - Ingestion: `parseBotFiles(tree)` -> persist `assets` bytes to GCS, fill

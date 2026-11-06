@@ -1,3 +1,8 @@
+export type RepoCapability = "read_issue" | "push_branch" | "propose_change" | "comment_issue" | "search_issues" | "read_change_request" | "read_repository" | "update_issue_labels" | "react_issue" | "update_issue_body" | "update_issue_title";
+export const FORMAT_VERSION: 1;
+export const MODEL_ROLES: string[];
+export const REPO_CAPABILITIES: RepoCapability[];
+export const GITREPO_TRIGGER_EVENT_TYPES: string[];
 // Type definitions for @librebot/tools (hand-written; no build step).
 
 export interface SourceIssue {
@@ -54,11 +59,9 @@ export interface BotDraft {
   knowledge: BotKnowledge[];
   skills: BotSkill[];
   connectors: BotConnector[];
-  triggers: Record<string, unknown>[];
-  /** IDs are deterministic parser-internal values, not platform UUIDs. */
-  workspace: Array<{ id: string; path: string }>;
-  githubActions: string[];
-  gitlabActions: string[];
+  triggers: Array<{ key: string; label: string; kind: "gitrepo"; eventTypes: string[]; description?: string; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: "default" | "smol" | "slow" | "plan"; deciderInstructions: string; enabledByDefault?: boolean }>;
+  workspace: Array<{ key: string; label?: string; path: string }>;
+  actions: Array<{ key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] }>;
 }
 
 export interface KnowledgeAsset {

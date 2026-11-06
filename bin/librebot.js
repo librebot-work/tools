@@ -129,17 +129,15 @@ async function cmdPreview(dir, json) {
   if (draft.triggers.length > 0) {
     console.log("triggers:");
     for (const trigger of draft.triggers) {
-      console.log(`  - ${trigger.label} [${trigger.kind}] ${trigger.eventTypes.join(", ")}${trigger.repository?.fullName ? ` -> ${trigger.repository.fullName}` : ""}`);
+      console.log(`  - ${trigger.label} [${trigger.key}; ${trigger.kind}] ${trigger.eventTypes.join(", ")}`);
     }
   }
   if (draft.workspace.length > 0) {
-    console.log(`workspace: ${draft.workspace.map((w) => w.path).join(", ")}`);
+    console.log(`workspace: ${draft.workspace.map((w) => `${w.key}: ${w.path}`).join(", ")}`);
   }
-  if (draft.githubActions.length > 0) {
-    console.log(`githubActions: ${draft.githubActions.join(", ")}`);
-  }
-  if (draft.gitlabActions.length > 0) {
-    console.log(`gitlabActions: ${draft.gitlabActions.join(", ")}`);
+  if (draft.actions.length > 0) {
+    console.log("actions:");
+    for (const group of draft.actions) console.log(`  - ${group.key} [${group.kind}]: ${group.capabilities.join(", ")}`);
   }
   if (result.lock) {
     console.log(`skill lock: ${result.lock.resolved.length} sources pinned`);

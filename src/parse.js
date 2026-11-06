@@ -15,8 +15,7 @@ import {
   entryId,
   requiredString,
   validateConnectors,
-  validateGithubActions,
-  validateGitlabActions,
+  validateActions,
   validateKnowledgeSources,
   validateModelRoles,
   validateTriggerDefinitions,
@@ -39,8 +38,7 @@ const TOP_LEVEL_KEYS = [
   "modelRoles",
   "workspace",
   "triggers",
-  "githubActions",
-  "gitlabActions",
+  "actions",
   "connectors",
   "knowledgeSources",
 ];
@@ -284,8 +282,7 @@ export async function validateFiles(input) {
   }
   const workspace = validateWorkspaceMounts(botDoc.workspace, sink, FILE_BOT_YAML);
   const triggers = validateTriggerDefinitions(botDoc.triggers, sink, FILE_BOT_YAML);
-  const githubActions = validateGithubActions(botDoc.githubActions, sink, FILE_BOT_YAML);
-  const gitlabActions = validateGitlabActions(botDoc.gitlabActions, sink, FILE_BOT_YAML);
+  const actions = validateActions(botDoc.actions, sink, FILE_BOT_YAML);
   const connectors = validateConnectors(botDoc.connectors, sink, FILE_BOT_YAML);
 
   for (const trigger of triggers) {
@@ -295,24 +292,10 @@ export async function validateFiles(input) {
     ) {
       errors.push({
         file: FILE_BOT_YAML,
-        field: `triggers.${trigger.id}.deciderRole`,
+        field: `triggers.${trigger.key}.deciderRole`,
         message: "must be one of the bot's declared model roles",
       });
     }
-  }
-  if (githubActions.length > 0 && workspace.length === 0) {
-    errors.push({
-      file: FILE_BOT_YAML,
-      field: "githubActions",
-      message: "require at least one declared workspace mount",
-    });
-  }
-  if (gitlabActions.length > 0 && workspace.length === 0) {
-    errors.push({
-      file: FILE_BOT_YAML,
-      field: "gitlabActions",
-      message: "require at least one declared workspace mount",
-    });
   }
 
   // --- knowledge ---
@@ -584,8 +567,7 @@ export async function validateFiles(input) {
     connectors,
     triggers,
     workspace,
-    githubActions,
-    gitlabActions,
+    actions,
   };
   // Byte length (UTF-8), exactly like the platform: char counts would let
   // multibyte-heavy drafts pass locally then fail the 750 KB ingest cap.

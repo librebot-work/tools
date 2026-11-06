@@ -29,82 +29,52 @@ describe("semantic cross-references", () => {
 
   it("rejects triggers whose deciderRole is not declared", async () => {
     const result = await base(
-      "triggers:\n  - label: T\n    kind: github\n    eventTypes: [issues.opened]\n    deciderRole: slow\n    deciderInstructions: decide\n",
+      "triggers:\n  - key: triage\n    label: T\n    kind: gitrepo\n    eventTypes: [issue.opened]\n    deciderRole: slow\n    deciderInstructions: decide\n",
     );
     assert.equal(result.ok, false);
     assert.ok(messages(result).some((m) => m.includes("declared model roles")));
   });
 
-  it("rejects githubActions without a workspace mount", async () => {
-    const result = await base("githubActions: [read_issue]\n");
-    assert.equal(result.ok, false);
-    assert.ok(messages(result).some((m) => m.includes("workspace mount")));
-  });
-
-  it("accepts every declared githubActions capability with a mount", async () => {
-    const result = await base(
-      "workspace:\n  - {path: ./code}\ngithubActions: [read_issue, push_branch, pull_request, comment_issue, search_issues, read_pull_request, read_repository, update_issue_labels, react_issue, update_issue_body, update_issue_title]\n",
-    );
+  it("accepts API-only actions without a workspace mount", async () => {
+    const result = await base("actions: [{key: repo, kind: gitrepo, capabilities: [read_issue]}]\n");
     assert.equal(result.ok, true);
-    assert.deepEqual(result.draft.githubActions, [
-      "read_issue",
-      "push_branch",
-      "pull_request",
-      "comment_issue",
-      "search_issues",
-      "read_pull_request",
-      "read_repository",
-      "update_issue_labels",
-      "react_issue",
-      "update_issue_body",
-      "update_issue_title",
-    ]);
+    assert.equal(result.draft.actions[0].key, "repo");
   });
 
-  it("rejects unknown and duplicate githubActions", async () => {
-    const unknown = await base("workspace:\n  - {path: ./code}\ngithubActions: [search_issue]\n");
-    assert.equal(unknown.ok, false);
-    assert.ok(messages(unknown).some((m) => m.includes("must be one of")));
-    const duplicate = await base("workspace:\n  - {path: ./code}\ngithubActions: [update_issue_labels, update_issue_labels]\n");
-    assert.equal(duplicate.ok, false);
-    assert.ok(messages(duplicate).some((m) => m.includes("duplicate")));
-  });
-
-  it("accepts all GitLab actions and keeps provider declarations independent", async () => {
-    const actions = ["read_issue", "push_branch", "merge_request", "comment_issue", "search_issues", "read_merge_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title"];
-    const result = await base(`workspace:\n  - {path: ./code}\ngithubActions: [pull_request]\ngitlabActions: ${JSON.stringify(actions)}\n`);
+  it("accepts every portable repository capability", async () => {
+    const capabilities = ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title"];
+    const result = await base(`workspace: [{key: source, path: ./code}]\nactions: [{key: repo, kind: gitrepo, capabilities: ${JSON.stringify(capabilities)}}]\n`);
     assert.equal(result.ok, true);
-    assert.deepEqual(result.draft.gitlabActions, actions);
-    assert.deepEqual(result.draft.githubActions, ["pull_request"]);
-    const absent = await base("");
-    assert.deepEqual(absent.draft.gitlabActions, []);
+    assert.deepEqual(result.draft.actions[0].capabilities, capabilities);
   });
 
-  it("rejects GitLab action shape, membership, duplicates, limits, and missing mounts", async () => {
-    for (const [value, message] of [
-      ["null", "must be an array"],
-      ["read_issue", "must be an array"],
-      ["[pull_request]", "must be one of"],
-      ["[read_pull_request]", "must be one of"],
-      ["[1]", "must be one of"],
-      ["[read_issue, read_issue]", "duplicate"],
-      [JSON.stringify(Array(12).fill("read_issue")), "too many"],
+  it("rejects malformed action groups and native provider capabilities", async () => {
+    for (const value of [
+      "null", "read_issue", "[read_issue]",
+      "[{key: repo, kind: github, capabilities: [read_issue]}]",
+      "[{key: repo, kind: gitrepo, capabilities: [pull_request]}]",
+      "[{key: repo, kind: gitrepo, capabilities: [read_merge_request]}]",
+      "[{key: repo, kind: gitrepo, capabilities: []}]",
+      "[{key: repo, kind: gitrepo, capabilities: [read_issue, read_issue]}]",
+      JSON.stringify(Array.from({ length: 21 }, (_, i) => ({ key: `repo${i}`, kind: "gitrepo", capabilities: ["read_issue"] }))),
     ]) {
-      const result = await base(`workspace:\n  - {path: ./code}\ngitlabActions: ${value}\n`);
-      assert.equal(result.ok, false, value);
-      assert.ok(result.errors.some((error) => error.field.startsWith("gitlabActions") && error.message.includes(message)), value);
+      assert.equal((await base(`actions: ${value}\n`)).ok, false, value);
     }
-    const missing = await base("gitlabActions: [read_issue]\n");
-    assert.equal(missing.ok, false);
-    assert.ok(missing.errors.some((error) => error.field === "gitlabActions" && error.message.includes("workspace mount")));
+  });
+
+  it("keeps independent action keys even when labels match", async () => {
+    const result = await base("actions: [{key: primary, label: Repository, kind: gitrepo, capabilities: [read_issue]}, {key: secondary, label: Repository, kind: gitrepo, capabilities: [propose_change]}]\n");
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.draft.actions.map((action) => action.key), ["primary", "secondary"]);
+    assert.equal((await base("actions: [{key: same, kind: gitrepo, capabilities: [read_issue]}, {key: same, kind: gitrepo, capabilities: [propose_change]}]\n")).ok, false);
   });
 
   it("rejects overlapping and duplicate mounts", async () => {
-    const overlap = await base("workspace:\n  - {path: ./code}\n  - {path: ./code/deep}\n");
+    const overlap = await base("workspace:\n  - {key: source, path: ./code}\n  - {key: nested, path: ./code/deep}\n");
     assert.equal(overlap.ok, false);
     assert.ok(messages(overlap).some((m) => m.includes("overlap")));
     const exclusive = await base(
-      "workspace:\n  - {path: ./}\n  - {path: ./code}\n",
+      "workspace:\n  - {key: root, path: ./}\n  - {key: source, path: ./code}\n",
     );
     assert.equal(exclusive.ok, false);
   });
@@ -112,8 +82,8 @@ describe("semantic cross-references", () => {
   it("rejects platform-owned metadata in source", async () => {
     for (const yaml of [
       "visibility: private\n",
-      "workspace:\n  - {id: legacy, path: ./code}\n",
-      "triggers:\n  - {id: legacy, label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n",
+      "workspace:\n  - {id: legacy, key: source, path: ./code}\n",
+      "triggers:\n  - {id: legacy, key: triage, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\n",
       "connectors:\n  - {id: legacy, label: C, tools: [search]}\n",
     ]) {
       const result = await base(yaml);
@@ -122,20 +92,21 @@ describe("semantic cross-references", () => {
     }
   });
 
-  it("derives stable declaration identities and rejects duplicate trigger labels", async () => {
-    const yaml = "workspace:\n  - {path: ./code}\ntriggers:\n  - {label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\nconnectors:\n  - {label: C, tools: [search]}\n";
+  it("preserves explicit keys across labels and paths and rejects duplicate keys", async () => {
+    const yaml = "workspace:\n  - {key: source, label: Source, path: ./code}\ntriggers:\n  - {key: triage, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\nconnectors:\n  - {label: C, tools: [search]}\n";
     const first = await base(yaml);
-    const second = await base(yaml);
+    const second = await base(yaml.replace("label: Source", "label: Renamed").replace("./code", "./renamed").replace("label: T,", "label: Renamed,"));
     assert.equal(first.ok, true);
-    assert.deepEqual(first.draft.workspace, second.draft.workspace);
-    assert.deepEqual(first.draft.triggers, second.draft.triggers);
+    assert.equal(second.ok, true);
+    assert.equal(second.draft.workspace[0].key, first.draft.workspace[0].key);
+    assert.equal(second.draft.triggers[0].key, first.draft.triggers[0].key);
     assert.deepEqual(first.draft.connectors, second.draft.connectors);
-    const duplicate = await base("triggers:\n  - {label: T, kind: github, eventTypes: [issues.opened], deciderInstructions: decide}\n  - {label: T, kind: github, eventTypes: [issues.closed], deciderInstructions: decide}\n");
+    const duplicate = await base("triggers:\n  - {key: same, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\n  - {key: same, label: Other, kind: gitrepo, eventTypes: [issue.closed], deciderInstructions: decide}\n");
     assert.equal(duplicate.ok, false);
-    assert.ok(messages(duplicate).some((message) => message.includes("duplicate trigger label")));
+    const sameLabel = await base("triggers:\n  - {key: first, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\n  - {key: second, label: T, kind: gitrepo, eventTypes: [issue.closed], deciderInstructions: decide}\n");
+    assert.equal(sameLabel.ok, true);
     const duplicateConnectors = await base("connectors:\n  - {label: C, tools: [search]}\n  - {label: ' C ', tools: [other]}\n");
     assert.equal(duplicateConnectors.ok, false);
-    assert.ok(messages(duplicateConnectors).some((message) => message.includes("duplicate connector label")));
   });
 
   it("rejects connector resources outside declared tools", async () => {
