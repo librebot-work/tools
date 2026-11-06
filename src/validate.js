@@ -37,10 +37,20 @@ export const GITLAB_ACTIONS = [
   "update_issue_title",
 ];
 export const TRIGGER_KIND_GITHUB = "github";
+export const TRIGGER_KIND_GITLAB = "gitlab";
+export const GITLAB_TRIGGER_EVENT_TYPES = [
+  "issues.open", "issues.update", "issues.close", "issues.reopen",
+  "merge_request.open", "merge_request.update", "merge_request.close",
+  "merge_request.reopen", "merge_request.merge", "merge_request.approved",
+  "merge_request.unapproved", "merge_request.approval", "merge_request.unapproval",
+  "note.issue.create", "note.issue.update",
+  "note.merge_request.create", "note.merge_request.update", "push",
+];
 
 const ENTRY_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const INPUT_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
 const REPO_FULL_NAME_RE = /^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/;
+const GITLAB_PROJECT_PATH_RE = /^[A-Za-z0-9_.-]{1,100}(?:\/[A-Za-z0-9_.-]{1,100})+$/;
 const MOUNT_SEGMENT_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const EVENT_TYPE_RE = /^[A-Za-z0-9._-]+$/;
 const REF_RE = /^[A-Za-z0-9._/][A-Za-z0-9._/-]*$/;
@@ -744,8 +754,8 @@ export function validateTriggerDefinitions(input, sink, file) {
       file,
     );
     let ok = true;
-    if (entry.kind !== TRIGGER_KIND_GITHUB) {
-      err(sink, file, `${field}.kind`, "must be github");
+    if (entry.kind !== TRIGGER_KIND_GITHUB && entry.kind !== TRIGGER_KIND_GITLAB) {
+      err(sink, file, `${field}.kind`, "must be github or gitlab");
       ok = false;
     }
     if (
@@ -776,6 +786,11 @@ export function validateTriggerDefinitions(input, sink, file) {
           return;
         }
         const normalized = type.trim();
+        if (entry.kind === TRIGGER_KIND_GITLAB && !GITLAB_TRIGGER_EVENT_TYPES.includes(normalized)) {
+          err(sink, file, `${field}.eventTypes[${j}]`, "must be a supported GitLab event type");
+          ok = false;
+          return;
+        }
         if (seenTypes[normalized]) {
           err(sink, file, `${field}.eventTypes`, "contains duplicates");
           ok = false;
@@ -804,7 +819,7 @@ export function validateTriggerDefinitions(input, sink, file) {
     const definition = {
       id,
       label,
-      kind: TRIGGER_KIND_GITHUB,
+      kind: entry.kind,
       eventTypes,
       deciderInstructions,
     };
@@ -830,28 +845,31 @@ export function validateTriggerDefinitions(input, sink, file) {
       const fullName = optionalText(
         entry.repository.fullName,
         `${field}.repository.fullName`,
-        201,
+        entry.kind === TRIGGER_KIND_GITLAB ? 1000 : 201,
         sink,
         file,
       );
+      const validFullName = (value) => entry.kind === TRIGGER_KIND_GITLAB
+        ? GITLAB_PROJECT_PATH_RE.test(value) && value.split("/").every((segment) => segment !== "." && segment !== "..")
+        : REPO_FULL_NAME_RE.test(value);
       if (mode === "pinned") {
-        if (fullName === undefined || !REPO_FULL_NAME_RE.test(fullName)) {
+        if (fullName === undefined || !validFullName(fullName)) {
           err(
             sink,
             file,
             `${field}.repository.fullName`,
-            "must be a full repository name owner/repo",
+            "must be a full repository or project path",
           );
           return;
         }
         definition.repository = { mode, fullName };
       } else {
-        if (fullName !== undefined && !REPO_FULL_NAME_RE.test(fullName)) {
+        if (fullName !== undefined && !validFullName(fullName)) {
           err(
             sink,
             file,
             `${field}.repository.fullName`,
-            "must be a full repository name owner/repo",
+            "must be a full repository or project path",
           );
           return;
         }

@@ -56,7 +56,7 @@
         "properties": {
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
           "description": { "type": "string", "maxLength": 2000 },
-          "kind": { "const": "github" },
+          "kind": { "enum": ["github", "gitlab"] },
           "eventTypes": {
             "type": "array",
             "minItems": 1,
@@ -69,7 +69,7 @@
             "required": ["mode"],
             "properties": {
               "mode": { "enum": ["any", "pinned"] },
-              "fullName": { "type": "string", "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$" }
+              "fullName": { "type": "string", "maxLength": 1000, "pattern": "^[A-Za-z0-9_.-]{1,100}(/[A-Za-z0-9_.-]{1,100})+$" }
             }
           },
           "inputs": {
@@ -97,7 +97,26 @@
           "deciderRole": { "enum": ["default", "smol", "slow", "plan"] },
           "deciderInstructions": { "type": "string", "minLength": 1, "maxLength": 20000 },
           "enabledByDefault": { "type": "boolean" }
-        }
+        },
+        "allOf": [{
+          "if": { "properties": { "kind": { "const": "github" } } },
+          "then": { "properties": { "repository": { "properties": {
+            "fullName": { "maxLength": 201, "pattern": "^[A-Za-z0-9_.-]{1,100}/[A-Za-z0-9_.-]{1,100}$" }
+          } } } },
+          "else": { "properties": {
+            "eventTypes": { "items": { "enum": [
+              "issues.open", "issues.update", "issues.close", "issues.reopen",
+              "merge_request.open", "merge_request.update", "merge_request.close",
+              "merge_request.reopen", "merge_request.merge", "merge_request.approved",
+              "merge_request.unapproved", "merge_request.approval", "merge_request.unapproval",
+              "note.issue.create", "note.issue.update",
+              "note.merge_request.create", "note.merge_request.update", "push"
+            ] } },
+            "repository": { "properties": { "fullName": {
+              "pattern": "^(?!\\.{1,2}(?:/|$))(?!.*/\\.{1,2}(?:/|$))[A-Za-z0-9_.-]{1,100}(/[A-Za-z0-9_.-]{1,100})+$"
+            } } }
+          } }
+        }]
       }
     },
     "githubActions": {

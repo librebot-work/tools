@@ -129,6 +129,20 @@ when `read_issue` or `read_pull_request` is enabled. Issue/PR conversation
 comments are read through `github_read_issue`; `github_read_pull_request`
 returns PR reviews. Inline review comments are not included.
 
+### GitLab trigger declarations
+
+Triggers accept `kind: gitlab` with native events: `issues.open/update/close/reopen`,
+`merge_request.open/update/close/reopen/merge/approved/unapproved/approval/unapproval`,
+`note.issue.create/update`, `note.merge_request.create/update`, and `push`.
+Each slash-separated suffix above denotes a separate event ID, for example
+`merge_request.open`. GitHub event aliases such as `issues.opened` are rejected
+for GitLab. GitHub behavior and label-derived declaration IDs remain unchanged.
+Pinned GitLab project paths support nested groups, for example
+`repository: {mode: pinned, fullName: group/subgroup/project}`.
+Declarations carry no credentials and do not install webhooks: bind the project
+and a live PAT connection in platform setup. Keep PATs and webhook tokens out
+of bot source.
+
 - `authorId` and the issue/PR creator's `authorId` are stable GitHub user IDs.
   `isIssueAuthor` compares these IDs, not mutable logins; it is `null` when
   either identity is missing. On a PR it refers to that PR's creator.
@@ -169,13 +183,13 @@ through `npx --package=... librebot`.
 ## Platform integration
 
 - The platform consumes the locally patched prerelease
-  `services/shared/librebot-tools-0.2.6-gitlab.0.tgz`, packed from this CLI
+  `services/shared/librebot-tools-0.2.6-gitlab.1.tgz`, packed from this CLI
   source checkout with GitLab source-format support. This is not a published
   npm release or a claim that any upstream commit contains these changes.
   Platform CI and images do not need this separate Git checkout. Refresh with
   `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
   then update the platform dependency and lockfile using
-  `npm install --workspace services.shared ./services/shared/librebot-tools-0.2.6-gitlab.0.tgz`.
+  `npm install --workspace services.shared ./services/shared/librebot-tools-0.2.6-gitlab.1.tgz`.
   Authoring environments must receive this exact local bundle rather than
   substituting an older public CLI pin, `main`, or `latest`.
 - Ingestion: `parseBotFiles(tree)` -> persist `assets` bytes to GCS, fill

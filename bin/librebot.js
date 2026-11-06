@@ -127,7 +127,10 @@ async function cmdPreview(dir, json) {
     }
   }
   if (draft.triggers.length > 0) {
-    console.log(`triggers: ${draft.triggers.map((t) => t.label).join(", ")}`);
+    console.log("triggers:");
+    for (const trigger of draft.triggers) {
+      console.log(`  - ${trigger.label} [${trigger.kind}] ${trigger.eventTypes.join(", ")}${trigger.repository?.fullName ? ` -> ${trigger.repository.fullName}` : ""}`);
+    }
   }
   if (draft.workspace.length > 0) {
     console.log(`workspace: ${draft.workspace.map((w) => w.path).join(", ")}`);
