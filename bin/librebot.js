@@ -50,6 +50,7 @@ function previewShape(result) {
         content: undefined,
       })),
     },
+    icon: result.icon ? (({ bytes, ...metadata }) => metadata)(result.icon) : undefined,
     assets: result.assets.map((a) => ({
       knowledgeId: a.knowledgeId,
       path: a.path,
@@ -106,6 +107,7 @@ async function cmdPreview(dir, json) {
   console.log(`# ${draft.name}`);
   console.log(`${draft.description}\n`);
   console.log(`prompt: instructions.md (${draft.botPrompt.length} chars)`);
+  if (result.icon) console.log(`icon: ${result.icon.path} ${result.icon.mime} ${result.icon.width}×${result.icon.height} ${result.icon.size}B sha256:${result.icon.sha256}`);
   console.log(`roles: ${draft.modelRoles.map((r) => r.role).join(", ")}`);
   console.log(`knowledge (${draft.knowledge.length}):`);
   for (const item of draft.knowledge) {

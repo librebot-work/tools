@@ -5,6 +5,7 @@ import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
 import { toBytes } from "./util.js";
+import { DEFAULT_ICON, iconPath, validateIcon } from "./icon.js";
 
 
 function skeletonInstructions(name) {
@@ -34,6 +35,7 @@ export function scaffoldBotFiles(input) {
     formatVersion: 1,
     name,
     description,
+    icon: "./assets/icon.svg",
     modelRoles: [{ role: "default", label: "Main" }],
     workspace: [],
     triggers: [],
@@ -42,6 +44,7 @@ export function scaffoldBotFiles(input) {
   };
   return {
     "bot.yaml": stringifyYaml(botYaml),
+    "assets/icon.svg": DEFAULT_ICON,
     "instructions.md": skeletonInstructions(name),
     "knowledge/README.md": skeletonKnowledgeReadme(name),
     "knowledge/product-guide.md": `# Product guide\n\nReplace this sample with real knowledge for ${name}.\n`,
@@ -65,7 +68,7 @@ export function scaffoldBotFiles(input) {
  */
 export function exportBotFiles(
   draft,
-  { assets = [], skillFiles = [], sourcesText, lockText } = {},
+  { assets = [], skillFiles = [], icon, sourcesText, lockText } = {},
 ) {
   if (typeof draft !== "object" || draft === null) {
     throw new Error("export requires a draft object");
@@ -117,10 +120,19 @@ export function exportBotFiles(
       files[claimPath(`knowledge/${sanitizeAssetRel(asset.path)}`)] = asset.bytes;
     }
   }
+  if (draft.icon !== undefined) {
+    const path = iconPath(draft.icon);
+    const asset = validateIcon(path, icon?.bytes);
+    if (Object.hasOwn(files, path) || ["bot.yaml", "instructions.md", "knowledge/README.md", "skills/sources.yaml", "skills/sources.lock"].includes(path) || path.startsWith("skills/")) {
+      throw new Error(`icon path conflicts with exported source: ${path}`);
+    }
+    files[path] = asset.bytes;
+  }
   files["bot.yaml"] = stringifyYaml({
     formatVersion: 1,
     name,
     description: description ?? "",
+    ...(draft.icon !== undefined ? { icon: `./${iconPath(draft.icon)}` } : {}),
     modelRoles: modelRoles ?? [{ role: "default", label: "Main" }],
     workspace: workspace ?? [],
     triggers: triggers ?? [],

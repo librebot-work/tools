@@ -10,6 +10,13 @@
     "formatVersion": { "const": 1 },
     "name": { "type": "string", "minLength": 1, "maxLength": 100 },
     "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "icon": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(\\./)?[^.\\\\/:\\s][^\\\\:\\s]*\\.([sS][vV][gG]|[pP][nN][gG]|[wW][eE][bB][pP])$",
+      "description": "Repository-relative path to an SVG, PNG, or WebP bot icon. For PNG and WebP, use a square image, ideally 512 × 512 pixels; transparent backgrounds are supported. For SVG, use a square viewBox. Icons are displayed at small sizes, so prefer simple artwork with adequate padding and avoid fine details or text."
+    },
     "modelRoles": {
       "type": "array",
       "minItems": 1,

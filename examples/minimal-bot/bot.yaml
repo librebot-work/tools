@@ -1,6 +1,7 @@
 formatVersion: 1
 name: Example bot
 description: Minimal bot source demonstrating the v1 format.
+icon: ./assets/icon.svg
 modelRoles:
   - role: default
     label: Main

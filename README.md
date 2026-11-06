@@ -32,6 +32,22 @@ Rules:
 
 - `bot.yaml` keys are strict: unknown fields are errors. `tools` was
   removed — builtin tools are always on, never declared.
+- Optional root `icon` is a repository-relative SVG, PNG, or WebP path.
+  New scaffolds include `icon: ./assets/icon.svg` and the default bot glyph.
+  Raster images must be square (512 × 512 recommended, not required); SVG
+  requires a square viewBox. Maximum edge is 4096 and maximum file size is
+  256 KiB. Transparent backgrounds, colored shapes, groups, transforms,
+  gradients, local fragment references, and allowlisted inline presentation
+  styles are supported. Scripts, event handlers, external references,
+  stylesheets, fonts, images, animation, DOCTYPE, and entities are rejected.
+  Prefer simple artwork with adequate padding.
+- Parsed `icon` is separate from knowledge and contains
+  `{ path, bytes, mime, sha256, size, width, height }`; `draft.icon` retains
+  the normalized `./` source reference. Export with
+  `exportBotFiles(parsed.draft, { icon: parsed.icon, assets: parsed.assets,
+  skillFiles: parsed.skillFiles })`. An icon reference without asset bytes
+  fails export rather than inventing replacement artwork. CLI preview shows
+  metadata only, never icon bytes.
 - Visibility is platform-managed and is not a source field. Workspace mounts,
   action groups, and triggers declare explicit stable `key` values. Mounts have
   `path`, actions and triggers use common `kind: gitrepo`; provider and target
@@ -76,13 +92,13 @@ Rules:
   frontmatter from draft fields when legacy content lacks it — so an
   export->parse round-trip preserves names, references, and bytes.
 import {
-  parseBotFiles,   // (files: Record<string, Uint8Array|string>) -> { formatVersion, draft, assets, skillFiles, warnings, source, lock }
+  parseBotFiles,   // (files: Record<string, Uint8Array|string>) -> { formatVersion, draft, icon?, assets, skillFiles, warnings, source, lock }
   parseBotSource,  // (dir) -> same; throws BotSourceError on invalid source
   validateFiles,   // non-throwing: { ok, errors, warnings, ... }
   validateSource,  // (dir) -> same; never throws on invalid source (only on IO)
   scaffoldBotFiles, // ({ name, description? }) -> Record<string, string>
   scaffoldBot,     // (dir, input, { force? }) -> written paths
-  exportBotFiles,  // (draft, { assets?, skillFiles?, sourcesText?, lockText? }) -> file map
+  exportBotFiles,  // (draft, { icon?: {bytes}, assets?, skillFiles?, sourcesText?, lockText? }) -> file map
   resolveSkillsLock, // ({ sources, existingLock?, update?, network?, vendor?, fetchImpl? })
   fetchLockedSkills, // (lock, { fetchImpl? }) -> { vendorFiles, errors }
   readTarEntries,  // (tarball bytes) -> [{ name, bytes, skipped }]; Recht-safe tar: skips specials, rejects traversal, enforces caps
@@ -91,7 +107,7 @@ import {
 ```
 
 - `validateSource(dir)` return shape: `{ ok: true, errors: [], warnings,
-  formatVersion, draft, assets, skillFiles, source, lock }` or
+  formatVersion, draft, icon?, assets, skillFiles, source, lock }` or
   `{ ok: false, errors: [{ file, field, message }], warnings }`. It never
   throws for invalid source (filesystem failures throw natively).
   `parseBotSource(dir)` throws `BotSourceError` (with `.errors[]` /
@@ -183,13 +199,13 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes `services/shared/librebot-tools-0.3.0.tgz`, packed from
+- The platform consumes `services/shared/librebot-tools-0.4.0.tgz`, packed from
   this source checkout. This is not a published npm release or a claim that an
   upstream commit contains these changes.
   Platform CI and images do not need this separate Git checkout. Refresh with
   `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
   then update the platform dependency and lockfile using
-  `npm install --workspace services.shared ./services/shared/librebot-tools-0.3.0.tgz`.
+  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.0.tgz`.
   Authoring environments must receive this exact local bundle rather than
   substituting an older public CLI pin, `main`, or `latest`.
 - Ingestion: `parseBotFiles(tree)` -> persist `assets` bytes to GCS, fill

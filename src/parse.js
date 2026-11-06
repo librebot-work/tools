@@ -10,6 +10,7 @@ import { BotSourceError, isRecord } from "./errors.js";
 import { checkSourcesLock, parseSourcesYaml } from "./skills-lock.js";
 import { sha256Hex, toBytes } from "./util.js";
 import { vendorContentHash } from "./skills-import.js";
+import { iconPath, validateIcon } from "./icon.js";
 import {
   FORMAT_VERSION,
   entryId,
@@ -35,6 +36,7 @@ const TOP_LEVEL_KEYS = [
   "formatVersion",
   "name",
   "description",
+  "icon",
   "modelRoles",
   "workspace",
   "triggers",
@@ -196,6 +198,7 @@ export async function parseBotFiles(input) {
     formatVersion: result.formatVersion,
     draft: result.draft,
     assets: result.assets,
+    icon: result.icon,
     skillFiles: result.skillFiles,
     warnings: result.warnings,
     source: result.source,
@@ -261,6 +264,15 @@ export async function validateFiles(input) {
     sink,
     FILE_BOT_YAML,
   );
+  let icon;
+  if (botDoc.icon !== undefined) {
+    try {
+      const path = iconPath(botDoc.icon);
+      icon = validateIcon(path, files.get(path));
+    } catch (error) {
+      errors.push({ file: FILE_BOT_YAML, field: "icon", message: error.message });
+    }
+  }
   let botPrompt;
   try {
     const text = new TextDecoder("utf-8", { fatal: true }).decode(instructionsBytes);
@@ -304,6 +316,7 @@ export async function validateFiles(input) {
   const knowledgeFiles = [];
   const knowledgeIds = {};
   for (const [path, bytes] of files) {
+    if (path === icon?.path) continue;
     if (!path.startsWith(DIR_KNOWLEDGE) || path === KNOWLEDGE_INDEX) continue;
     if (isSkipped(path)) continue;
     const rel = path.slice(DIR_KNOWLEDGE.length);
@@ -560,6 +573,7 @@ export async function validateFiles(input) {
   const draft = {
     name,
     description,
+    ...(icon ? { icon: `./${icon.path}` } : {}),
     botPrompt,
     modelRoles,
     knowledge,
@@ -571,7 +585,8 @@ export async function validateFiles(input) {
   };
   // Byte length (UTF-8), exactly like the platform: char counts would let
   // multibyte-heavy drafts pass locally then fail the 750 KB ingest cap.
-  if (new TextEncoder().encode(JSON.stringify(draft)).length > MAX_DRAFT_BYTES) {
+  const iconPayloadBytes = icon ? 13 + `data:${icon.mime};base64,`.length + 4 * Math.ceil(icon.size / 3) : 0;
+  if (new TextEncoder().encode(JSON.stringify(draft)).length + iconPayloadBytes > MAX_DRAFT_BYTES) {
     return {
       ok: false,
       errors: [
@@ -588,6 +603,7 @@ export async function validateFiles(input) {
     formatVersion: FORMAT_VERSION,
     draft,
     assets,
+    icon,
     skillFiles,
     source: {
       botYaml: FILE_BOT_YAML,

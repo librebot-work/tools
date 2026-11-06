@@ -62,6 +62,7 @@ export interface BotDraft {
   triggers: Array<{ key: string; label: string; kind: "gitrepo"; eventTypes: string[]; description?: string; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: "default" | "smol" | "slow" | "plan"; deciderInstructions: string; enabledByDefault?: boolean }>;
   workspace: Array<{ key: string; label?: string; path: string }>;
   actions: Array<{ key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] }>;
+  icon?: string;
 }
 
 export interface KnowledgeAsset {
@@ -106,10 +107,21 @@ export interface SkillLock {
   vendorDirs: string[];
 }
 
+export interface IconAsset {
+  path: string;
+  bytes: Uint8Array;
+  mime: string;
+  sha256: string;
+  size: number;
+  width: number;
+  height: number;
+}
+
 export interface ParsedBotSource {
   formatVersion: 1;
   draft: BotDraft;
   assets: KnowledgeAsset[];
+  icon?: IconAsset;
   skillFiles: SkillFile[];
   warnings: SourceIssue[];
   source: SourceInventory;
@@ -211,6 +223,7 @@ export function scaffoldBotFiles(input: {
 export function exportBotFiles(
   draft: BotDraft,
   options?: {
+    icon?: { bytes: Uint8Array };
     assets?: KnowledgeAsset[];
     skillFiles?: SkillFile[];
     sourcesText?: string;

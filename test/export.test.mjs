@@ -13,7 +13,7 @@ import {
 describe("export fidelity", () => {
   it("scaffolds a valid source that round-trips its draft", async () => {
     const initial = await parseBotFiles(scaffoldBotFiles({ name: "Smoke" }));
-    const roundtrip = await parseBotFiles(exportBotFiles(initial.draft));
+    const roundtrip = await parseBotFiles(exportBotFiles(initial.draft, { icon: initial.icon }));
     assert.deepEqual(roundtrip.draft, initial.draft);
   });
 
