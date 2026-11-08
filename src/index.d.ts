@@ -1,4 +1,5 @@
 export type RepoCapability = "read_issue" | "push_branch" | "propose_change" | "comment_issue" | "search_issues" | "read_change_request" | "read_repository" | "update_issue_labels" | "react_issue" | "update_issue_body" | "update_issue_title";
+export type WhatsAppCapability = "read_messages" | "send_text" | "set_reaction" | "remove_reaction";
 export const FORMAT_VERSION: 1;
 export const MODEL_ROLES: string[];
 export const REPO_CAPABILITIES: RepoCapability[];
@@ -59,9 +60,9 @@ export interface BotDraft {
   knowledge: BotKnowledge[];
   skills: BotSkill[];
   connectors: BotConnector[];
-  triggers: Array<{ key: string; label: string; kind: "gitrepo"; eventTypes: string[]; description?: string; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: "default" | "smol" | "slow" | "plan"; deciderInstructions: string; enabledByDefault?: boolean }>;
+  triggers: Array<{ key: string; label: string; kind: "gitrepo" | "whatsapp"; eventTypes: string[]; description?: string; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: "default" | "smol" | "slow" | "plan"; deciderInstructions: string; enabledByDefault?: boolean }>;
   workspace: Array<{ key: string; label?: string; path: string }>;
-  actions: Array<{ key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] }>;
+  actions: Array<{ key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] } | { key: string; kind: "whatsapp"; label?: string; capabilities: WhatsAppCapability[] }>;
   icon?: string;
 }
 

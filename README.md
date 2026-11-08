@@ -199,15 +199,24 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes `services/shared/librebot-tools-0.4.0.tgz`, packed from
+- The platform consumes `services/shared/librebot-tools-0.4.1.tgz`, packed from
   this source checkout. This is not a published npm release or a claim that an
   upstream commit contains these changes.
   Platform CI and images do not need this separate Git checkout. Refresh with
   `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
   then update the platform dependency and lockfile using
-  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.0.tgz`.
+  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.1.tgz`.
   Authoring environments must receive this exact local bundle rather than
   substituting an older public CLI pin, `main`, or `latest`.
+- Portable `actions` also accept `kind: whatsapp` with only `read_messages`,
+  `send_text`, `set_reaction`, and `remove_reaction`. Repository capabilities
+  remain exclusive to `gitrepo`. Exact sender-phone bindings, independent read
+  context, destination policies, and automated-write consent belong to owner
+  instance settings, never portable source. Version 0.4.1 adds this parser/schema
+  contract; it is locally bundled, not published to npm by this change.
+- Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
+  and/or `reaction.changed`, and the existing keyed decider definition fields.
+  Event namespaces are checked against the selected trigger kind.
 - Ingestion: `parseBotFiles(tree)` -> persist `assets` bytes to GCS, fill
   the platform `BotKnowledge` path/storage fields, materialize `skillFiles`
   per skill, then run platform validation. `draft` carries no `tools` field.

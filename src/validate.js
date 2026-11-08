@@ -547,6 +547,8 @@ export function validateWorkspaceMounts(input, sink, file) {
   return mounts;
 }
 
+export const WHATSAPP_CAPABILITIES = ["read_messages", "send_text", "set_reaction", "remove_reaction"];
+export const WHATSAPP_TRIGGER_EVENT_TYPES = ["message.created", "reaction.changed"];
 export function validateActions(input, sink, file) {
   if (input === undefined) return [];
   if (!Array.isArray(input) || input.length > 20) {
@@ -564,24 +566,25 @@ export function validateActions(input, sink, file) {
     checkKeys(entry, ["key", "kind", "label", "capabilities"], field, sink, file);
     const key = entryId(entry.key, `${field}.key`, sink, file);
     const label = optionalText(entry.label, `${field}.label`, 100, sink, file);
-    if (entry.kind !== "gitrepo") err(sink, file, `${field}.kind`, "must be gitrepo");
+    if (entry.kind !== "gitrepo" && entry.kind !== "whatsapp") err(sink, file, `${field}.kind`, "must be gitrepo or whatsapp");
+    const supported = entry.kind === "whatsapp" ? WHATSAPP_CAPABILITIES : REPO_CAPABILITIES;
     if (key === undefined) return;
     if (seen.has(key)) err(sink, file, `${field}.key`, `contains duplicate key ${key}`);
     seen.add(key);
     if (!Array.isArray(entry.capabilities) || entry.capabilities.length === 0 ||
-        entry.capabilities.length > REPO_CAPABILITIES.length) {
+        entry.capabilities.length > supported.length) {
       err(sink, file, `${field}.capabilities`, "must be a non-empty array of capabilities");
       return;
     }
     const capabilities = new Set();
     entry.capabilities.forEach((capability, j) => {
-      if (!REPO_CAPABILITIES.includes(capability)) {
-        err(sink, file, `${field}.capabilities[${j}]`, "must be a supported repository capability");
+      if (!supported.includes(capability)) {
+        err(sink, file, `${field}.capabilities[${j}]`, "must be a supported capability for the action kind");
       } else if (capabilities.has(capability)) {
         err(sink, file, `${field}.capabilities`, "contains duplicates");
       } else capabilities.add(capability);
     });
-    out.push({ key, kind: "gitrepo", ...(label === undefined ? {} : { label }), capabilities: [...capabilities] });
+    out.push({ key, kind: entry.kind, ...(label === undefined ? {} : { label }), capabilities: [...capabilities] });
   });
   return out;
 }
@@ -715,8 +718,8 @@ export function validateTriggerDefinitions(input, sink, file) {
       file,
     );
     let ok = true;
-    if (entry.kind !== "gitrepo") {
-      err(sink, file, `${field}.kind`, "must be gitrepo");
+    if (entry.kind !== "gitrepo" && entry.kind !== "whatsapp") {
+      err(sink, file, `${field}.kind`, "must be gitrepo or whatsapp");
       ok = false;
     }
     if (
@@ -747,8 +750,8 @@ export function validateTriggerDefinitions(input, sink, file) {
           return;
         }
         const normalized = type.trim();
-        if (!GITREPO_TRIGGER_EVENT_TYPES.includes(normalized)) {
-          err(sink, file, `${field}.eventTypes[${j}]`, "must be a supported semantic repository event type");
+        if (!(entry.kind === "whatsapp" ? WHATSAPP_TRIGGER_EVENT_TYPES : GITREPO_TRIGGER_EVENT_TYPES).includes(normalized)) {
+          err(sink, file, `${field}.eventTypes[${j}]`, "must be a supported semantic event type for the trigger kind");
           ok = false;
           return;
         }
