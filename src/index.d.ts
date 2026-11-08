@@ -56,6 +56,8 @@ export interface BotDraft {
   name: string;
   description: string;
   botPrompt: string;
+  /** User-facing documentation from root README.md, separate from the prompt and knowledge. */
+  readme: string;
   modelRoles: BotModelRole[];
   knowledge: BotKnowledge[];
   skills: BotSkill[];

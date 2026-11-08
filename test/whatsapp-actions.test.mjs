@@ -4,6 +4,7 @@ import { validateFiles } from '../src/index.js';
 const files = (kind, capabilities) => ({
   'bot.yaml': `formatVersion: 1\nname: Messenger\ndescription: Replies with permission\nmodelRoles:\n  - {role: default, label: Main}\nactions:\n  - {key: messaging, kind: ${kind}, capabilities: [${capabilities.join(', ')}]}\n`,
   'instructions.md': 'Use only owner-bound messaging authority.',
+  'README.md': '# Messenger',
 });
 it('parses portable WhatsApp reads, text and reaction declarations', async () => {
   const result = await validateFiles(files('whatsapp', ['read_messages', 'send_text', 'set_reaction', 'remove_reaction']));

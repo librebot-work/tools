@@ -11,6 +11,7 @@ const base = (yaml) =>
       "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
       yaml,
     "instructions.md": "Be helpful.",
+    "README.md": "# T",
   });
 
 const messages = (result) => result.errors.map((e) => e.message);
@@ -20,6 +21,7 @@ describe("semantic cross-references", () => {
     const files = {
       "bot.yaml": "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
       "instructions.md": "Be helpful.",
+      "README.md": "# T",
     };
     for (let i = 0; i < 4; i++) files[`knowledge/${i}.txt`] = "界".repeat(70_000);
     const result = await validateFiles(files);
@@ -134,6 +136,7 @@ describe("semantic cross-references", () => {
       "bot.yaml":
         "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n    requirements: { vision: true, minContextWindow: 128000 }\nconnectors:\n  - label: GitHub\n    tools: [search]\n    endpoint: https://mcp.example.com/rpc\n",
       "instructions.md": "Be helpful.",
+      "README.md": "# T",
     });
     assert.equal(result.ok, true);
     assert.equal(result.draft.connectors[0].endpoint, "https://mcp.example.com/rpc");
@@ -154,6 +157,7 @@ describe("semantic cross-references", () => {
       "bot.yaml":
         "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\nknowledgeSources:\n  - id: guide__intro.md\n    name: Guide\n    kind: resource\n    url: https://example.com/g\n",
       "instructions.md": "Be helpful.",
+      "README.md": "# T",
       "knowledge/guide/intro.md": "hello",
     });
     assert.equal(collision.ok, false);
@@ -165,6 +169,7 @@ describe("semantic cross-references", () => {
       "bot.yaml":
         "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
       "instructions.md": "Be helpful.",
+      "README.md": "# T",
       "skills/empty/SKILL.md": "   \n",
     });
     assert.equal(result.ok, false);

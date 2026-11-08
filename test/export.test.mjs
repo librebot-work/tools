@@ -35,6 +35,7 @@ describe("export fidelity", () => {
       description: "D",
       visibility: "public",
       botPrompt: "Hi.",
+      readme: "# T",
       workspace: [{ key: "source", label: "Source", path: "./code" }],
       triggers: [{ key: "issues", label: "Issues", kind: "gitrepo", eventTypes: ["issue.opened"], deciderInstructions: "Decide" }],
       connectors: [{ id: "platform-connector", label: "Connector", tools: ["search"], resources: [{ key: "scope", label: "Scope", tools: ["search"] }] }],
@@ -69,6 +70,7 @@ describe("export fidelity", () => {
       description: "D",
       visibility: "private",
       botPrompt: "Hi.",
+      readme: "# T",
       modelRoles: [{ role: "default", label: "Main", requirements: {} }],
       knowledge: [
         { id: "docs", name: "Docs", kind: "resource", url: "https://example.com/d" },
@@ -98,6 +100,7 @@ describe("export fidelity", () => {
         exportBotFiles({
           name: "T",
           botPrompt: "Hi.",
+          readme: "# T",
           knowledge: [{ id: "x", name: "X", kind: "file" }],
         }),
       /no content and no asset/,
@@ -109,6 +112,7 @@ describe("export fidelity", () => {
       name: "T",
       description: "D",
       botPrompt: "Hi.",
+      readme: "# T",
       knowledge: [
         { id: "evil", name: "../../etc/passwd", kind: "file", content: "x" },
         { id: "evil2", name: "a/b", kind: "file", content: "y" },
@@ -133,6 +137,7 @@ describe("export fidelity", () => {
       name: "T",
       description: "D",
       botPrompt: "Hi.",
+      readme: "# T",
       skills: [{ id: "legacy", name: "Legacy", description: "Old skill.", content: "Just instructions.\n" }],
     });
     const reparsed = await parseBotFiles(exported);

@@ -11,16 +11,18 @@ const base = (yaml = "") =>
       "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
       yaml,
     "instructions.md": "Be helpful.",
+    "README.md": "# T",
   });
 
 const fieldsOf = (result) => result.errors.map((e) => `${e.file}:${e.field}`);
 
 describe("malformed source", () => {
-  it("requires bot.yaml and instructions.md", async () => {
+  it("requires bot.yaml, instructions.md, and README.md", async () => {
     const missing = await validateFiles({});
     assert.equal(missing.ok, false);
     assert.ok(missing.errors.some((e) => e.file === "bot.yaml"));
     assert.ok(missing.errors.some((e) => e.file === "instructions.md"));
+    assert.ok(missing.errors.some((e) => e.file === "README.md"));
   });
 
   it("rejects invalid YAML with the file blamed", async () => {

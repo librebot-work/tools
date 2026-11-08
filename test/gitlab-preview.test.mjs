@@ -11,6 +11,7 @@ it("previews portable repository capabilities in human and JSON output", async (
   try {
     await writeFile(join(dir, "bot.yaml"), "formatVersion: 1\nname: Repository\ndescription: D\nmodelRoles:\n  - {role: default, label: Main}\nworkspace:\n  - {key: source, path: ./code}\nactions:\n  - {key: repo, kind: gitrepo, capabilities: [propose_change, read_change_request]}\n");
     await writeFile(join(dir, "instructions.md"), "Be helpful.");
+    await writeFile(join(dir, "README.md"), "# Repository");
     const cli = fileURLToPath(new URL("../bin/librebot.js", import.meta.url));
     const text = execFileSync(process.execPath, [cli, "preview", dir], { encoding: "utf8" });
     assert.ok(text.length > 0);

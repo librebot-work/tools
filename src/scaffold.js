@@ -12,6 +12,10 @@ function skeletonInstructions(name) {
   return `# ${name}\n\nDescribe what this bot does, how it should behave, and any\npolicies it must follow. This file becomes the bot's main prompt.\n`;
 }
 
+function skeletonReadme(name) {
+  return `# ${name}\n\nDescribe this bot's purpose, intended users, and how to get started.\nThis README is user-facing documentation, not part of the bot's prompt.\n\n## Source files\n\n- \`bot.yaml\`: identity, model roles, and capabilities.\n- \`instructions.md\`: the bot's main prompt and behavior policies.\n- \`knowledge/\`: reference material available to the bot.\n- \`skills/\`: reusable task instructions and supporting files.\n`;
+}
+
 function skeletonKnowledgeReadme(name) {
   return `# Knowledge\n\nFiles in this directory are the bot's knowledge assets. Any file format\nis accepted in source; large or binary files travel as content-addressed\nassets alongside the parsed definition.\n\n- \`product-guide.md\` — sample knowledge document for ${name}.\n`;
 }
@@ -44,6 +48,7 @@ export function scaffoldBotFiles(input) {
   };
   return {
     "bot.yaml": stringifyYaml(botYaml),
+    "README.md": skeletonReadme(name),
     "assets/icon.svg": DEFAULT_ICON,
     "instructions.md": skeletonInstructions(name),
     "knowledge/README.md": skeletonKnowledgeReadme(name),
@@ -85,6 +90,13 @@ export function exportBotFiles(
   } = draft;
   if (typeof name !== "string" || typeof botPrompt !== "string") {
     throw new Error("export requires at least draft name and botPrompt");
+  }
+  if (typeof draft.readme !== "string" || !draft.readme.trim()) {
+    throw new Error("export requires a non-empty draft readme");
+  }
+  const readme = draft.readme.trim();
+  if (readme.length > 100000) {
+    throw new Error("draft readme is too long (max 100000 chars)");
   }
   /** @type {Record<string, string|Uint8Array>} */
   const files = {};
@@ -141,6 +153,7 @@ export function exportBotFiles(
     knowledgeSources,
   });
   files["instructions.md"] = botPrompt;
+  files["README.md"] = readme;
   files["knowledge/README.md"] =
     "# Knowledge\n\nFiles in this directory are the bot's knowledge assets.\n";
   const skillExtras = new Map();

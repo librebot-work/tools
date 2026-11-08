@@ -102,6 +102,7 @@ describe("vendor extraction", () => {
       "bot.yaml":
         "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
       "instructions.md": "Hi.",
+      "README.md": "# T",
       "skills/sources.yaml": `version: 1\nsources:\n  - name: solo\n    source: octo/solo\n    ref: ${sha}\n`,
       "skills/sources.lock": serializeLock(lock),
       ...out,

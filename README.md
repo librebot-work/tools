@@ -10,6 +10,7 @@ build step, hand-written types in `src/index.d.ts`.
 bot.yaml                 # identity, description, format version, model roles,
                          # workspace mounts, triggers, actions, connectors
 instructions.md          # main prompt (-> BotDraft.botPrompt)
+README.md                # required user documentation (-> BotDraft.readme)
 
 knowledge/
   README.md              # human/agent index only; never a knowledge entry
@@ -32,6 +33,13 @@ Rules:
 
 - `bot.yaml` keys are strict: unknown fields are errors. `tools` was
   removed — builtin tools are always on, never declared.
+- Required root `README.md` becomes `draft.readme`: strict UTF-8, trimmed,
+  non-empty, and at most 100000 characters after trimming.
+  It is presentation-only user documentation, never `botPrompt` or knowledge,
+  and is distinct from the optional `knowledge/README.md` index.
+  Export requires a non-empty string `draft.readme` and writes it back to root
+  `README.md`; sources without root documentation fail validation.
+  New scaffolds include a concise README explaining the source files.
 - Optional root `icon` is a repository-relative SVG, PNG, or WebP path.
   New scaffolds include `icon: ./assets/icon.svg` and the default bot glyph.
   Raster images must be square (512 × 512 recommended, not required); SVG

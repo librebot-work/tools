@@ -25,6 +25,7 @@ import {
 
 const FILE_BOT_YAML = "bot.yaml";
 const FILE_INSTRUCTIONS = "instructions.md";
+const FILE_README = "README.md";
 const DIR_KNOWLEDGE = "knowledge/";
 const DIR_SKILLS = "skills/";
 const DIR_VENDOR = "skills/.vendor/";
@@ -229,6 +230,10 @@ export async function validateFiles(input) {
   if (instructionsBytes === undefined) {
     errors.push({ file: FILE_INSTRUCTIONS, field: "", message: "is required" });
   }
+  const readmeBytes = files.get(FILE_README);
+  if (readmeBytes === undefined) {
+    errors.push({ file: FILE_README, field: "", message: "is required" });
+  }
   if (botDoc === undefined || instructionsBytes === undefined) {
     return { ok: false, errors, warnings };
   }
@@ -285,6 +290,22 @@ export async function validateFiles(input) {
     }
   } catch {
     errors.push({ file: FILE_INSTRUCTIONS, field: "", message: "must be UTF-8 text" });
+  }
+
+  let readme;
+  if (readmeBytes !== undefined) {
+    try {
+      const text = new TextDecoder("utf-8", { fatal: true }).decode(readmeBytes).trim();
+      if (!text) {
+        errors.push({ file: FILE_README, field: "", message: "must not be empty" });
+      } else if (text.length > 100000) {
+        errors.push({ file: FILE_README, field: "", message: "is too long (max 100000 chars)" });
+      } else {
+        readme = text;
+      }
+    } catch {
+      errors.push({ file: FILE_README, field: "", message: "must be UTF-8 text" });
+    }
   }
 
   const modelRoles = validateModelRoles(botDoc.modelRoles, sink, FILE_BOT_YAML);
@@ -575,6 +596,7 @@ export async function validateFiles(input) {
     description,
     ...(icon ? { icon: `./${icon.path}` } : {}),
     botPrompt,
+    readme,
     modelRoles,
     knowledge,
     skills,
