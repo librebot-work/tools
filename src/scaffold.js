@@ -12,8 +12,41 @@ function skeletonInstructions(name) {
   return `# ${name}\n\nDescribe what this bot does, how it should behave, and any\npolicies it must follow. This file becomes the bot's main prompt.\n`;
 }
 
-function skeletonReadme(name) {
-  return `# ${name}\n\nDescribe this bot's purpose, intended users, and how to get started.\nThis README is user-facing documentation, not part of the bot's prompt.\n\n## Source files\n\n- \`bot.yaml\`: identity, model roles, and capabilities.\n- \`instructions.md\`: the bot's main prompt and behavior policies.\n- \`knowledge/\`: reference material available to the bot.\n- \`skills/\`: reusable task instructions and supporting files.\n`;
+// User-facing manual published on the bot page; placeholders tell the author
+// what bot users need to know before clicking Use.
+function skeletonReadme(name, description) {
+  return `# ${name}
+
+${description}
+
+## Good for
+
+- Replace with the jobs this bot helps with and the result users get.
+
+## Not for
+
+- Replace with requests this bot does not handle.
+
+## What you need
+
+- **AI access**: an AI credential that can run the bot's main model.
+- **Connections**: none. If the bot declares repositories, actions, triggers,
+  or MCP connectors, list each connection here with why it is needed, the
+  permissions it uses, and whether it is required or optional.
+
+## Get started
+
+1. Click **Use** and choose the main model in **Models**.
+2. Open **Tasks** and start a **New task**.
+
+## Example requests
+
+- Replace with a request this bot handles well.
+
+## What the bot changes
+
+Nothing outside its task conversation.
+`;
 }
 
 function skeletonKnowledgeReadme(name) {
@@ -48,7 +81,7 @@ export function scaffoldBotFiles(input) {
   };
   return {
     "bot.yaml": stringifyYaml(botYaml),
-    "README.md": skeletonReadme(name),
+    "README.md": skeletonReadme(name, description),
     "assets/icon.svg": DEFAULT_ICON,
     "instructions.md": skeletonInstructions(name),
     "knowledge/README.md": skeletonKnowledgeReadme(name),

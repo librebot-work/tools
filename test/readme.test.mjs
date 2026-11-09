@@ -92,9 +92,6 @@ describe("root README documentation", () => {
   it("includes useful root documentation in file-map and on-disk scaffolds", async () => {
     const source = scaffoldBotFiles({ name: "Helper" });
     assert.match(source["README.md"], /^# Helper\n/);
-    for (const path of ["bot.yaml", "instructions.md", "knowledge/", "skills/"]) {
-      assert.ok(source["README.md"].includes(path));
-    }
     assert.notEqual(source["README.md"], source["knowledge/README.md"]);
     const parsed = await parseBotFiles(source);
     assert.equal(parsed.draft.readme, source["README.md"].trim());

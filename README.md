@@ -39,7 +39,9 @@ Rules:
   and is distinct from the optional `knowledge/README.md` index.
   Export requires a non-empty string `draft.readme` and writes it back to root
   `README.md`; sources without root documentation fail validation.
-  New scaffolds include a concise README explaining the source files.
+  New scaffolds include a user-manual README skeleton (purpose, limits, what
+  you need, getting started, examples, what the bot changes) for the author
+  to complete; it is published on new bot pages as-is.
 - Optional root `icon` is a repository-relative SVG, PNG, or WebP path.
   New scaffolds include `icon: ./assets/icon.svg` and the default bot glyph.
   Raster images must be square (512 × 512 recommended, not required); SVG
@@ -207,21 +209,22 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes `services/shared/librebot-tools-0.4.1.tgz`, packed from
+- The platform consumes `services/shared/librebot-tools-0.4.2.tgz`, packed from
   this source checkout. This is not a published npm release or a claim that an
   upstream commit contains these changes.
   Platform CI and images do not need this separate Git checkout. Refresh with
   `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
   then update the platform dependency and lockfile using
-  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.1.tgz`.
+  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.2.tgz`.
   Authoring environments must receive this exact local bundle rather than
   substituting an older public CLI pin, `main`, or `latest`.
 - Portable `actions` also accept `kind: whatsapp` with only `read_messages`,
   `send_text`, `set_reaction`, and `remove_reaction`. Repository capabilities
   remain exclusive to `gitrepo`. Exact sender-phone bindings, independent read
   context, destination policies, and automated-write consent belong to owner
-  instance settings, never portable source. Version 0.4.1 adds this parser/schema
-  contract; it is locally bundled, not published to npm by this change.
+  instance settings, never portable source. Version 0.4.1 added this parser/schema
+  contract; 0.4.2 replaces the scaffold README with a user-manual skeleton.
+  Both are locally bundled, not published to npm.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
