@@ -44,7 +44,7 @@ describe("semantic cross-references", () => {
   });
 
   it("accepts every portable repository capability", async () => {
-    const capabilities = ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title"];
+    const capabilities = ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments"];
     const result = await base(`workspace: [{key: source, path: ./code}]\nactions: [{key: repo, kind: gitrepo, capabilities: ${JSON.stringify(capabilities)}}]\n`);
     assert.equal(result.ok, true);
     assert.deepEqual(result.draft.actions[0].capabilities, capabilities);

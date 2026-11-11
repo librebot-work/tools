@@ -152,7 +152,11 @@ triggers:
 
 Action capabilities are `read_issue`, `push_branch`, `propose_change`,
 `comment_issue`, `search_issues`, `read_change_request`, `read_repository`,
-`update_issue_labels`, `react_issue`, `update_issue_body`, and `update_issue_title`.
+`update_issue_labels`, `react_issue`, `update_issue_body`, `update_issue_title`, and
+`publish_attachments` (GitHub only: uploads task-local SVG/PNG files as issue
+attachments, posts one comment embedding them, and optionally transitions labels
+after the comment is confirmed; it needs an owner-linked upload token on the
+GitHub connection, and GitLab bindings are rejected).
 Groups require at least one capability; at most 20 groups are accepted.
 API-only actions do not require workspace. Platform bindings select the provider,
 connection, numeric repository identity, and optional checkout independently.
@@ -209,13 +213,13 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes `services/shared/librebot-tools-0.4.2.tgz`, packed from
+- The platform consumes `services/shared/librebot-tools-0.4.3.tgz`, packed from
   this source checkout. This is not a published npm release or a claim that an
   upstream commit contains these changes.
   Platform CI and images do not need this separate Git checkout. Refresh with
   `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
   then update the platform dependency and lockfile using
-  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.2.tgz`.
+  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.3.tgz`.
   Authoring environments must receive this exact local bundle rather than
   substituting an older public CLI pin, `main`, or `latest`.
 - Portable `actions` also accept `kind: whatsapp` with only `read_messages`,
@@ -223,8 +227,9 @@ through `npx --package=... librebot`.
   remain exclusive to `gitrepo`. Exact sender-phone bindings, independent read
   context, destination policies, and automated-write consent belong to owner
   instance settings, never portable source. Version 0.4.1 added this parser/schema
-  contract; 0.4.2 replaces the scaffold README with a user-manual skeleton.
-  Both are locally bundled, not published to npm.
+  contract; 0.4.2 replaces the scaffold README with a user-manual skeleton;
+  0.4.3 adds the `publish_attachments` repository capability.
+  All are locally bundled, not published to npm.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.

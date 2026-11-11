@@ -119,14 +119,14 @@
           "kind": { "enum": ["gitrepo", "whatsapp"] },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
           "capabilities": {
-            "type": "array", "minItems": 1, "maxItems": 11, "uniqueItems": true,
-            "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "read_messages", "send_text", "set_reaction", "remove_reaction"] }
+            "type": "array", "minItems": 1, "maxItems": 12, "uniqueItems": true,
+            "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "read_messages", "send_text", "set_reaction", "remove_reaction"] }
           }
         },
         "allOf": [{
           "if": { "properties": { "kind": { "const": "whatsapp" } } },
           "then": { "properties": { "capabilities": { "maxItems": 4, "items": { "enum": ["read_messages", "send_text", "set_reaction", "remove_reaction"] } } } },
-          "else": { "properties": { "capabilities": { "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title"] } } } }
+          "else": { "properties": { "capabilities": { "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments"] } } } }
         }]
       }
     },

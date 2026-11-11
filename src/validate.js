@@ -14,6 +14,7 @@ export const REPO_CAPABILITIES = [
   "read_issue", "push_branch", "propose_change", "comment_issue",
   "search_issues", "read_change_request", "read_repository",
   "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title",
+  "publish_attachments",
 ];
 export const GITREPO_TRIGGER_EVENT_TYPES = [
   "issue.opened", "issue.updated", "issue.closed", "issue.reopened",
