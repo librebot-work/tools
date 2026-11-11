@@ -44,10 +44,18 @@ describe("semantic cross-references", () => {
   });
 
   it("accepts every portable repository capability", async () => {
-    const capabilities = ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments"];
+    const capabilities = ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request"];
     const result = await base(`workspace: [{key: source, path: ./code}]\nactions: [{key: repo, kind: gitrepo, capabilities: ${JSON.stringify(capabilities)}}]\n`);
     assert.equal(result.ok, true);
     assert.deepEqual(result.draft.actions[0].capabilities, capabilities);
+  });
+
+  it("parses and validates a bot authored with merge_change_request and change_request.checks_updated", async () => {
+    const result = await base("workspace: [{key: source, path: ./code}]\nactions: [{key: repo, kind: gitrepo, capabilities: [read_change_request, merge_change_request]}]\ntriggers: [{key: checks, label: Checks, kind: gitrepo, eventTypes: [change_request.checks_updated], deciderInstructions: Decide.}]\n");
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.draft.actions[0].capabilities, ["read_change_request", "merge_change_request"]);
+    assert.deepEqual(result.draft.triggers[0].eventTypes, ["change_request.checks_updated"]);
+    assert.equal((await base("actions: [{key: repo, kind: gitrepo, capabilities: [merge_pull_request]}]\n")).ok, false);
   });
 
   it("rejects malformed action groups and native provider capabilities", async () => {

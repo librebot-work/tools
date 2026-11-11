@@ -72,7 +72,7 @@
             "minItems": 1,
             "maxItems": 20,
             "uniqueItems": true,
-            "items": { "enum": ["issue.opened", "issue.updated", "issue.closed", "issue.reopened", "issue.comment.created", "issue.comment.updated", "change_request.opened", "change_request.updated", "change_request.closed", "change_request.reopened", "change_request.merged", "change_request.commits_updated", "change_request.comment.created", "change_request.comment.updated", "change_request.approval_changed", "repository.pushed", "message.created", "reaction.changed"] }
+            "items": { "enum": ["issue.opened", "issue.updated", "issue.closed", "issue.reopened", "issue.comment.created", "issue.comment.updated", "change_request.opened", "change_request.updated", "change_request.closed", "change_request.reopened", "change_request.merged", "change_request.commits_updated", "change_request.checks_updated", "change_request.comment.created", "change_request.comment.updated", "change_request.approval_changed", "repository.pushed", "message.created", "reaction.changed"] }
           },
           "inputs": {
             "type": "array",
@@ -103,7 +103,7 @@
         "allOf": [{
           "if": { "properties": { "kind": { "const": "whatsapp" } } },
           "then": { "properties": { "eventTypes": { "items": { "enum": ["message.created", "reaction.changed"] } } } },
-          "else": { "properties": { "eventTypes": { "items": { "enum": ["issue.opened", "issue.updated", "issue.closed", "issue.reopened", "issue.comment.created", "issue.comment.updated", "change_request.opened", "change_request.updated", "change_request.closed", "change_request.reopened", "change_request.merged", "change_request.commits_updated", "change_request.comment.created", "change_request.comment.updated", "change_request.approval_changed", "repository.pushed"] } } } }
+          "else": { "properties": { "eventTypes": { "items": { "enum": ["issue.opened", "issue.updated", "issue.closed", "issue.reopened", "issue.comment.created", "issue.comment.updated", "change_request.opened", "change_request.updated", "change_request.closed", "change_request.reopened", "change_request.merged", "change_request.commits_updated", "change_request.checks_updated", "change_request.comment.created", "change_request.comment.updated", "change_request.approval_changed", "repository.pushed"] } } } }
         }]
       }
     },
@@ -119,14 +119,14 @@
           "kind": { "enum": ["gitrepo", "whatsapp"] },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
           "capabilities": {
-            "type": "array", "minItems": 1, "maxItems": 12, "uniqueItems": true,
-            "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "read_messages", "send_text", "set_reaction", "remove_reaction"] }
+            "type": "array", "minItems": 1, "maxItems": 13, "uniqueItems": true,
+            "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request", "read_messages", "send_text", "set_reaction", "remove_reaction"] }
           }
         },
         "allOf": [{
           "if": { "properties": { "kind": { "const": "whatsapp" } } },
           "then": { "properties": { "capabilities": { "maxItems": 4, "items": { "enum": ["read_messages", "send_text", "set_reaction", "remove_reaction"] } } } },
-          "else": { "properties": { "capabilities": { "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments"] } } } }
+          "else": { "properties": { "capabilities": { "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request"] } } } }
         }]
       }
     },

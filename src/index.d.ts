@@ -1,4 +1,4 @@
-export type RepoCapability = "read_issue" | "push_branch" | "propose_change" | "comment_issue" | "search_issues" | "read_change_request" | "read_repository" | "update_issue_labels" | "react_issue" | "update_issue_body" | "update_issue_title" | "publish_attachments";
+export type RepoCapability = "read_issue" | "push_branch" | "propose_change" | "comment_issue" | "search_issues" | "read_change_request" | "read_repository" | "update_issue_labels" | "react_issue" | "update_issue_body" | "update_issue_title" | "publish_attachments" | "merge_change_request";
 export type WhatsAppCapability = "read_messages" | "send_text" | "set_reaction" | "remove_reaction";
 export const FORMAT_VERSION: 1;
 export const MODEL_ROLES: string[];

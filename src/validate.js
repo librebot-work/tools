@@ -14,13 +14,14 @@ export const REPO_CAPABILITIES = [
   "read_issue", "push_branch", "propose_change", "comment_issue",
   "search_issues", "read_change_request", "read_repository",
   "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title",
-  "publish_attachments",
+  "publish_attachments", "merge_change_request",
 ];
 export const GITREPO_TRIGGER_EVENT_TYPES = [
   "issue.opened", "issue.updated", "issue.closed", "issue.reopened",
   "issue.comment.created", "issue.comment.updated",
   "change_request.opened", "change_request.updated", "change_request.closed",
   "change_request.reopened", "change_request.merged", "change_request.commits_updated",
+  "change_request.checks_updated",
   "change_request.comment.created", "change_request.comment.updated",
   "change_request.approval_changed", "repository.pushed",
 ];
