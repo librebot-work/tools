@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 import { execFile } from "node:child_process";
 import { parseBotFiles, scaffoldBotFiles, exportBotFiles } from "../src/index.js";
-import { GITREPO_TRIGGER_EVENT_TYPES } from "../src/validate.js";
+import { GITREPO_TRIGGER_EVENT_TYPES } from "../src/contract.js";
 
 const trigger = (overrides = {}) => ({ key: "project-events", label: "Project events", kind: "gitrepo", eventTypes: ["change_request.opened"], deciderInstructions: "Decide whether to act", ...overrides });
 const source = (triggers) => ({ ...scaffoldBotFiles({ name: "Triggers" }), "bot.yaml": `formatVersion: 1\nname: Triggers\ndescription: D\nmodelRoles: [{role: default, label: Main}]\ntriggers: ${JSON.stringify(triggers)}\n` });

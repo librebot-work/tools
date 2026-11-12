@@ -11,8 +11,8 @@ import { checkSourcesLock, parseSourcesYaml } from "./skills-lock.js";
 import { sha256Hex, toBytes } from "./util.js";
 import { vendorContentHash } from "./skills-import.js";
 import { iconPath, validateIcon } from "./icon.js";
+import { FORMAT_VERSION } from "./contract.js";
 import {
-  FORMAT_VERSION,
   entryId,
   requiredString,
   validateConnectors,

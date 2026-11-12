@@ -46,5 +46,12 @@ export {
 } from "./scaffold.js";
 export { SCHEMA_VERSIONS, loadSchema } from "./schema.js";
 export { canonicalJson, sha256Hex, toBytes } from "./util.js";
-export { FORMAT_VERSION, MODEL_ROLES, REPO_CAPABILITIES, GITREPO_TRIGGER_EVENT_TYPES } from "./validate.js";
+export {
+  FORMAT_VERSION,
+  MODEL_ROLES,
+  REPO_CAPABILITIES,
+  GITREPO_TRIGGER_EVENT_TYPES,
+  WHATSAPP_CAPABILITIES,
+  WHATSAPP_TRIGGER_EVENT_TYPES,
+} from "./contract.js";
 export { validateKnowledgeSources, validateRequirements } from "./validate.js";

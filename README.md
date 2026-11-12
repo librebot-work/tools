@@ -122,6 +122,13 @@ import {
   throws for invalid source (filesystem failures throw natively).
   `parseBotSource(dir)` throws `BotSourceError` (with `.errors[]` /
   `.warnings[]`) instead. Same contract for `validateFiles` / `parseBotFiles`.
+- `librebot-tools/contract` exports the portable vocabulary with no Node
+  dependencies, so browsers can import it too: `FORMAT_VERSION`,
+  `MODEL_ROLES`, `REPO_CAPABILITIES`, `GITREPO_TRIGGER_EVENT_TYPES`,
+  `WHATSAPP_CAPABILITIES`, `WHATSAPP_TRIGGER_EVENT_TYPES` (frozen arrays), and
+  the derived `ModelRoleId`, `RepoCapability`, `WhatsAppCapability`,
+  `GitrepoTriggerEventType`, and `WhatsAppTriggerEventType` types. The root
+  entry re-exports the same values.
 - No author-configured shell commands are executed. Standard skill
   installation uses fixed CLI arguments only after explicit local
   `--network --vendor` consent; source locators are passed as arguments,

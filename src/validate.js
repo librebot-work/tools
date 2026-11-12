@@ -7,24 +7,10 @@
 
 import { isRecord } from "./errors.js";
 import { sha256Hex } from "./util.js";
-
-export const FORMAT_VERSION = 1;
-export const MODEL_ROLES = ["default", "smol", "slow", "plan"];
-export const REPO_CAPABILITIES = [
-  "read_issue", "push_branch", "propose_change", "comment_issue",
-  "search_issues", "read_change_request", "read_repository",
-  "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title",
-  "publish_attachments", "merge_change_request",
-];
-export const GITREPO_TRIGGER_EVENT_TYPES = [
-  "issue.opened", "issue.updated", "issue.closed", "issue.reopened",
-  "issue.comment.created", "issue.comment.updated",
-  "change_request.opened", "change_request.updated", "change_request.closed",
-  "change_request.reopened", "change_request.merged", "change_request.commits_updated",
-  "change_request.checks_updated",
-  "change_request.comment.created", "change_request.comment.updated",
-  "change_request.approval_changed", "repository.pushed",
-];
+import {
+  MODEL_ROLES, REPO_CAPABILITIES, GITREPO_TRIGGER_EVENT_TYPES,
+  WHATSAPP_CAPABILITIES, WHATSAPP_TRIGGER_EVENT_TYPES,
+} from "./contract.js";
 
 const ENTRY_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const INPUT_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
@@ -549,8 +535,6 @@ export function validateWorkspaceMounts(input, sink, file) {
   return mounts;
 }
 
-export const WHATSAPP_CAPABILITIES = ["read_messages", "send_text", "set_reaction", "remove_reaction"];
-export const WHATSAPP_TRIGGER_EVENT_TYPES = ["message.created", "reaction.changed"];
 export function validateActions(input, sink, file) {
   if (input === undefined) return [];
   if (!Array.isArray(input) || input.length > 20) {
