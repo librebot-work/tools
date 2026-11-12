@@ -1,4 +1,4 @@
-# @librebot/tools
+# librebot-tools
 
 Public source-format tooling for Librebot bots: parse, validate, preview,
 scaffold, and external-skill lock resolution. Standalone ESM package, no
@@ -113,7 +113,7 @@ import {
   fetchLockedSkills, // (lock, { fetchImpl? }) -> { vendorFiles, errors }
   readTarEntries,  // (tarball bytes) -> [{ name, bytes, skipped }]; Recht-safe tar: skips specials, rejects traversal, enforces caps
   loadSchema,      // ('v1') -> bot.yaml JSON Schema object
-} from "@librebot/tools";
+} from "librebot-tools";
 ```
 
 - `validateSource(dir)` return shape: `{ ok: true, errors: [], warnings,

@@ -4,7 +4,7 @@ export const FORMAT_VERSION: 1;
 export const MODEL_ROLES: string[];
 export const REPO_CAPABILITIES: RepoCapability[];
 export const GITREPO_TRIGGER_EVENT_TYPES: string[];
-// Type definitions for @librebot/tools (hand-written; no build step).
+// Type definitions for librebot-tools (hand-written; no build step).
 
 export interface SourceIssue {
   file: string;

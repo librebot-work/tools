@@ -1,4 +1,4 @@
-// Public entry point for @librebot/tools.
+// Public entry point for librebot-tools.
 
 export { BotSourceError } from "./errors.js";
 export {
