@@ -47,11 +47,19 @@ export {
 export { SCHEMA_VERSIONS, loadSchema } from "./schema.js";
 export { canonicalJson, sha256Hex, toBytes } from "./util.js";
 export {
+  BUILT_IN_MODEL_ROLES,
+  CUSTOM_MODEL_ROLE_ID_RE,
   FORMAT_VERSION,
+  MAX_MODEL_ROLES,
   MODEL_ROLES,
   REPO_CAPABILITIES,
+  RESERVED_MODEL_ROLE_IDS,
   GITREPO_TRIGGER_EVENT_TYPES,
   WHATSAPP_CAPABILITIES,
   WHATSAPP_TRIGGER_EVENT_TYPES,
+  isBuiltInModelRole,
+  isCustomModelRoleId,
+  isModelRoleId,
+  isReservedModelRoleId,
 } from "./contract.js";
 export { validateKnowledgeSources, validateRequirements } from "./validate.js";

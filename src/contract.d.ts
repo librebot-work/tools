@@ -1,5 +1,13 @@
 export const FORMAT_VERSION: 1;
 export const MODEL_ROLES: readonly ["default", "smol", "slow", "plan"];
+export const BUILT_IN_MODEL_ROLES: readonly ["default", "smol", "slow", "plan"];
+export const MAX_MODEL_ROLES: 8;
+export const RESERVED_MODEL_ROLE_IDS: readonly string[];
+export const CUSTOM_MODEL_ROLE_ID_RE: RegExp;
+export function isReservedModelRoleId(role: string): boolean;
+export function isBuiltInModelRole(role: string): role is BuiltInModelRoleId;
+export function isCustomModelRoleId(role: string): boolean;
+export function isModelRoleId(role: string): role is ModelRoleId;
 export const REPO_CAPABILITIES: readonly [
   "read_issue", "push_branch", "propose_change", "comment_issue",
   "search_issues", "read_change_request", "read_repository",
@@ -18,7 +26,8 @@ export const GITREPO_TRIGGER_EVENT_TYPES: readonly [
 export const WHATSAPP_CAPABILITIES: readonly ["read_messages", "send_text", "set_reaction", "remove_reaction"];
 export const WHATSAPP_TRIGGER_EVENT_TYPES: readonly ["message.created", "reaction.changed"];
 
-export type ModelRoleId = typeof MODEL_ROLES[number];
+export type BuiltInModelRoleId = typeof MODEL_ROLES[number];
+export type ModelRoleId = string;
 export type RepoCapability = typeof REPO_CAPABILITIES[number];
 export type GitrepoTriggerEventType = typeof GITREPO_TRIGGER_EVENT_TYPES[number];
 export type WhatsAppCapability = typeof WHATSAPP_CAPABILITIES[number];

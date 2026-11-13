@@ -8,8 +8,9 @@
 import { isRecord } from "./errors.js";
 import { sha256Hex } from "./util.js";
 import {
-  MODEL_ROLES, REPO_CAPABILITIES, GITREPO_TRIGGER_EVENT_TYPES,
+  MAX_MODEL_ROLES, REPO_CAPABILITIES, GITREPO_TRIGGER_EVENT_TYPES,
   WHATSAPP_CAPABILITIES, WHATSAPP_TRIGGER_EVENT_TYPES,
+  isModelRoleId,
 } from "./contract.js";
 
 const ENTRY_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -182,8 +183,8 @@ function stringList(value, field, sink, file) {
 }
 
 export function validateModelRoles(input, sink, file) {
-  if (!Array.isArray(input) || input.length === 0 || input.length > 4) {
-    err(sink, file, "modelRoles", "must declare 1-4 roles including default");
+  if (!Array.isArray(input) || input.length === 0 || input.length > MAX_MODEL_ROLES) {
+    err(sink, file, "modelRoles", `must declare 1-${MAX_MODEL_ROLES} roles including default`);
     return [];
   }
   const seen = {};
@@ -195,8 +196,8 @@ export function validateModelRoles(input, sink, file) {
       return;
     }
     checkKeys(entry, ["role", "label", "requirements"], field, sink, file);
-    if (typeof entry.role !== "string" || !MODEL_ROLES.includes(entry.role)) {
-      err(sink, file, `${field}.role`, "must be one of default, smol, slow, plan");
+    if (typeof entry.role !== "string" || !isModelRoleId(entry.role)) {
+      err(sink, file, `${field}.role`, "must be default, smol, slow, plan, or a custom id of letters/digits with -/_ (max 64 chars, starting alphanumeric, not a reserved OMP or object key)");
       return;
     }
     if (seen[entry.role]) {
@@ -807,12 +808,12 @@ export function validateTriggerDefinitions(input, sink, file) {
       definition.inputs = inputs;
     }
     if (entry.deciderRole !== undefined) {
-      if (typeof entry.deciderRole !== "string" || !MODEL_ROLES.includes(entry.deciderRole)) {
+      if (typeof entry.deciderRole !== "string" || !isModelRoleId(entry.deciderRole)) {
         err(
           sink,
           file,
           `${field}.deciderRole`,
-          "must be one of default, smol, slow, plan",
+          "must be a declared model role: default, smol, slow, plan, or a custom role id",
         );
         return;
       }

@@ -4,6 +4,33 @@
 
 export const FORMAT_VERSION = 1;
 export const MODEL_ROLES = Object.freeze(["default", "smol", "slow", "plan"]);
+export const BUILT_IN_MODEL_ROLES = MODEL_ROLES;
+export const MAX_MODEL_ROLES = 8;
+// Reserved ids beyond the four portable built-ins: OMP built-in agent/model
+// role names plus dangerous object keys. Custom ids must avoid all of these;
+// only default/smol/slow/plan are portable workspace defaults.
+export const RESERVED_MODEL_ROLE_IDS = Object.freeze([
+  "default", "smol", "slow", "plan",
+  "vision", "commit", "tiny", "memory", "task", "advisor", "widget",
+  "image", "web", "speech", "dictation", "judge",
+  "__proto__", "constructor", "prototype",
+]);
+export function isReservedModelRoleId(role) {
+  return RESERVED_MODEL_ROLE_IDS.includes(role);
+}
+// Custom model role ids: safe slugs that never collide with reserved OMP
+// built-in names. Dots are excluded so role ids stay usable as binding keys
+// and selectors.
+export const CUSTOM_MODEL_ROLE_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+export function isBuiltInModelRole(role) {
+  return MODEL_ROLES.includes(role);
+}
+export function isCustomModelRoleId(role) {
+  return typeof role === "string" && CUSTOM_MODEL_ROLE_ID_RE.test(role) && !isReservedModelRoleId(role);
+}
+export function isModelRoleId(role) {
+  return isBuiltInModelRole(role) || isCustomModelRoleId(role);
+}
 export const REPO_CAPABILITIES = Object.freeze([
   "read_issue", "push_branch", "propose_change", "comment_issue",
   "search_issues", "read_change_request", "read_repository",

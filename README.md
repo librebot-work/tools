@@ -64,7 +64,18 @@ Rules:
   bindings belong to instances. Connectors retain unique labels and platform
   identities. Knowledge source IDs remain portable references.
 - `modelRoles[]` accepts optional `requirements: { tools?, vision?,
-  reasoning?, minContextWindow? }`, validated and preserved end to end.
+-   reasoning?, minContextWindow? }`, validated and preserved end to end.
+- Role ids are `default` (required), the reserved OMP built-ins `smol`,
+- `slow`, `plan`, or custom ids such as `frontend_dev_model`: start with a
+- letter or digit, then letters/digits with `-`/`_` only, max 64 chars.
+- Custom ids must avoid all reserved ids: the four built-ins plus the OMP
+- built-in names `vision`, `commit`, `tiny`, `memory`, `task`, `advisor`,
+- `widget`, `image`, `web`, `speech`, `dictation`, `judge` and the unsafe
+- object keys `__proto__`, `constructor`, `prototype` (no dots).
+- Up to 8 roles may be declared. A trigger `deciderRole` may name any
+- declared role. Custom roles never inherit workspace model defaults: every
+- custom role needs an explicit instance model binding, while defaults cover
+- the built-ins only.
 - `knowledge/README.md` is the index, not an entry. Every other file under
   `knowledge/` is one knowledge asset: UTF-8 text inlines as `content`;
   anything else is returned as an `assets[]` entry
@@ -124,9 +135,13 @@ import {
   `.warnings[]`) instead. Same contract for `validateFiles` / `parseBotFiles`.
 - `librebot-tools/contract` exports the portable vocabulary with no Node
   dependencies, so browsers can import it too: `FORMAT_VERSION`,
-  `MODEL_ROLES`, `REPO_CAPABILITIES`, `GITREPO_TRIGGER_EVENT_TYPES`,
+  `MODEL_ROLES` (reserved OMP built-ins `default`, `smol`, `slow`, `plan`),
+  `BUILT_IN_MODEL_ROLES` (alias), `MAX_MODEL_ROLES` (8),
+  `CUSTOM_MODEL_ROLE_ID_RE`, `isBuiltInModelRole`, `isCustomModelRoleId`,
+  `isModelRoleId`, plus `REPO_CAPABILITIES`, `GITREPO_TRIGGER_EVENT_TYPES`,
   `WHATSAPP_CAPABILITIES`, `WHATSAPP_TRIGGER_EVENT_TYPES` (frozen arrays), and
-  the derived `ModelRoleId`, `RepoCapability`, `WhatsAppCapability`,
+  the derived `ModelRoleId` (generic string: built-in or custom),
+  `BuiltInModelRoleId`, `RepoCapability`, `WhatsAppCapability`,
   `GitrepoTriggerEventType`, and `WhatsAppTriggerEventType` types. The root
   entry re-exports the same values.
 - No author-configured shell commands are executed. Standard skill
@@ -222,15 +237,13 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes `services/shared/librebot-tools-0.4.4.tgz`, packed from
-  this source checkout. This is not a published npm release or a claim that an
-  upstream commit contains these changes.
-  Platform CI and images do not need this separate Git checkout. Refresh with
-  `npm pack --pack-destination "$HOME/librebot.work/services/shared"`,
-  then update the platform dependency and lockfile using
-  `npm install --workspace services.shared ./services/shared/librebot-tools-0.4.4.tgz`.
-  Authoring environments must receive this exact local bundle rather than
-  substituting an older public CLI pin, `main`, or `latest`.
+- The platform consumes an exact public source archive of this checkout,
+- `https://codeload.github.com/librebot-work/tools/tar.gz/<40-char-SHA>`,
+- never a local path or a `git+https` spec (minimal validator images lack
+- git). Refresh the pin to the commit that carries the needed contract and
+- update the platform dependency and lockfile against that archive URL.
+- Authoring environments must receive this exact archive rather than
+- substituting an older public CLI pin, `main`, or `latest`.
 - Portable `actions` also accept `kind: whatsapp` with only `read_messages`,
   `send_text`, `set_reaction`, and `remove_reaction`. Repository capabilities
   remain exclusive to `gitrepo`. Exact sender-phone bindings, independent read
@@ -239,8 +252,11 @@ through `npx --package=... librebot`.
   contract; 0.4.2 replaces the scaffold README with a user-manual skeleton;
   0.4.3 adds the `publish_attachments` repository capability; 0.4.4 adds the
   `merge_change_request` repository capability and the
-  `change_request.checks_updated` trigger event.
-  All are locally bundled, not published to npm.
+  `change_request.checks_updated` trigger event; 0.4.6 adds custom model role
+  ids (up to 8 roles including `default`; workspace defaults stay built-in-only
+  while custom roles require explicit instance bindings).
+  Custom-role sources require tooling at 0.4.6 or newer; 0.4.5 accepts only
+  `default`, `smol`, `slow`, `plan`.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
@@ -272,7 +288,9 @@ export round-trips, and skill-lock reproducibility.
 
 750 KB draft cap (UTF-8 bytes); knowledge <= 100 entries (files + `knowledgeSources`
 combined); skills <= 100; connectors <= 50; triggers <= 20; workspace
-mounts <= 10; model roles 1-4 including `default`; SKILL.md <= 50,000 bytes
+mounts <= 10; model roles 1-8 including `default` (reserved built-ins
+`default`, `smol`, `slow`, `plan` plus custom ids such as `frontend_dev_model`);
+SKILL.md <= 50,000 bytes
 and non-empty; text knowledge <= 100,000 chars inline (empty files inline
 as empty content, matching platform acceptance); knowledge assets
 <= 10 MiB; skill supporting files <= 1 MiB each.
