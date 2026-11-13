@@ -237,13 +237,11 @@ through `npx --package=... librebot`.
 
 ## Platform integration
 
-- The platform consumes an exact public source archive of this checkout,
-- `https://codeload.github.com/librebot-work/tools/tar.gz/<40-char-SHA>`,
-- never a local path or a `git+https` spec (minimal validator images lack
-- git). Refresh the pin to the commit that carries the needed contract and
-- update the platform dependency and lockfile against that archive URL.
-- Authoring environments must receive this exact archive rather than
-- substituting an older public CLI pin, `main`, or `latest`.
+- The platform pins the exact npm release in its dependency manifest and lockfile.
+  API/runtime ingestion and the Git validator install the same version.
+- Bot authors use `npx --yes --package=librebot-tools@latest librebot ...`.
+  Custom model roles require version `0.4.6` or newer; publish a compatible
+  platform release before adopting a newer source contract.
 - Portable `actions` also accept `kind: whatsapp` with only `read_messages`,
   `send_text`, `set_reaction`, and `remove_reaction`. Repository capabilities
   remain exclusive to `gitrepo`. Exact sender-phone bindings, independent read
