@@ -235,6 +235,30 @@ External skill resolution requires `npx` on PATH. It selects its pinned Skills C
 independently of the parent npm invocation, including when Librebot itself runs
 through `npx --package=... librebot`.
 
+## Publishing
+
+Releases use `.github/workflows/publish.yml` on GitHub-hosted runners with npm
+trusted publishing (OIDC). No npm token or per-release browser approval is needed.
+The npm package's Trusted Publisher must authorize organization `librebot-work`,
+repository `tools`, workflow filename `publish.yml`, with direct `npm publish`
+allowed and no environment name.
+
+After the compatible platform contract is ready, commit the version change and
+lockfile, merge it to `main`, then push a matching stable version tag:
+
+```sh
+git tag v0.4.7
+git push origin v0.4.7
+```
+
+Use the new package version, not an already published version. The workflow
+requires the tag to match `package.json` and point to a commit reachable from
+`main`, installs dependencies, runs tests, inspects the package, and publishes.
+Protect `main` and restrict creation/update/deletion of `v*` tags to release
+maintainers: pushing a release tag authorizes publishing. npm trusted publisher
+setup must complete its first successful publish within two days; otherwise
+recreate that configuration when a release is ready.
+
 ## Platform integration
 
 - The platform pins the exact npm release in its dependency manifest and lockfile.
