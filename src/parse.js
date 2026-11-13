@@ -19,6 +19,7 @@ import {
   validateActions,
   validateKnowledgeSources,
   validateModelRoles,
+  validateCompletionJudge,
   validateTriggerDefinitions,
   validateWorkspaceMounts,
 } from "./validate.js";
@@ -39,6 +40,7 @@ const TOP_LEVEL_KEYS = [
   "description",
   "icon",
   "modelRoles",
+  "completionJudge",
   "workspace",
   "triggers",
   "actions",
@@ -313,6 +315,7 @@ export async function validateFiles(input) {
   for (const role of modelRoles) {
     if (role.role === "default") role.requirements.tools = true;
   }
+  const completionJudge = validateCompletionJudge(botDoc.completionJudge, modelRoles, sink, FILE_BOT_YAML);
   const workspace = validateWorkspaceMounts(botDoc.workspace, sink, FILE_BOT_YAML);
   const triggers = validateTriggerDefinitions(botDoc.triggers, sink, FILE_BOT_YAML);
   const actions = validateActions(botDoc.actions, sink, FILE_BOT_YAML);
@@ -598,6 +601,7 @@ export async function validateFiles(input) {
     botPrompt,
     readme,
     modelRoles,
+    ...(completionJudge !== undefined ? { completionJudge } : {}),
     knowledge,
     skills,
     connectors,

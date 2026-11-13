@@ -217,6 +217,28 @@ export function validateModelRoles(input, sink, file) {
   return roles;
 }
 
+export function validateCompletionJudge(input, modelRoles, sink, file) {
+  if (input === undefined) return undefined;
+  const field = "completionJudge";
+  if (!isRecord(input)) {
+    err(sink, file, field, "must be an object");
+    return undefined;
+  }
+  checkKeys(input, ["instructions", "modelRole"], field, sink, file);
+  const instructions = requiredString(input.instructions, `${field}.instructions`, 20000, sink, file);
+  if (input.modelRole !== undefined && (
+    !isModelRoleId(input.modelRole) ||
+    !modelRoles.some((role) => role.role === input.modelRole)
+  )) {
+    err(sink, file, `${field}.modelRole`, "must be one of the bot's declared model roles");
+  }
+  if (instructions === undefined) return undefined;
+  return {
+    instructions,
+    ...(input.modelRole !== undefined ? { modelRole: input.modelRole } : {}),
+  };
+}
+
 /**
  * Model capability requirements. Passed through (validated) so bot.yaml
  * preserves the full platform ModelRequirements contract: tools, vision,

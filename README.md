@@ -76,6 +76,13 @@ Rules:
 - declared role. Custom roles never inherit workspace model defaults: every
 - custom role needs an explicit instance model binding, while defaults cover
 - the built-ins only.
+- Optional `completionJudge: { instructions, modelRole? }` enables authoritative
+  automatic task completion using the task's full tools and capability boundary.
+  Instructions must be non-empty (at most 20000 characters after trimming).
+  The role defaults to `default`; an explicit role must appear in `modelRoles`,
+  including custom roles. Omitting the judge disables automatic completion.
+  Export/import preserves the optional judge and omitted role without inventing
+  defaults. Invalid or failed judge output leaves the task open.
 - `knowledge/README.md` is the index, not an entry. Every other file under
   `knowledge/` is one knowledge asset: UTF-8 text inlines as `content`;
   anything else is returned as an `assets[]` entry
@@ -279,6 +286,9 @@ recreate that configuration when a release is ready.
   while custom roles require explicit instance bindings).
   Custom-role sources require tooling at 0.4.6 or newer; 0.4.5 accepts only
   `default`, `smol`, `slow`, `plan`.
+  Version 0.4.7 adds optional `completionJudge`; this source artifact must be
+  integrated into the platform before using that field. An unpublished local
+  package can be installed from its `npm pack` archive without registry access.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.

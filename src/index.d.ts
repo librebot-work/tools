@@ -48,6 +48,12 @@ export interface BotConnector {
   endpoint?: string;
 }
 
+export interface BotCompletionJudge {
+  instructions: string;
+  /** Declared role; defaults to default when omitted. */
+  modelRole?: ModelRoleId;
+}
+
 export interface BotDraft {
   name: string;
   description: string;
@@ -55,6 +61,8 @@ export interface BotDraft {
   /** User-facing documentation from root README.md, separate from the prompt and knowledge. */
   readme: string;
   modelRoles: BotModelRole[];
+  /** Omit to disable automatic task completion. */
+  completionJudge?: BotCompletionJudge;
   knowledge: BotKnowledge[];
   skills: BotSkill[];
   connectors: BotConnector[];

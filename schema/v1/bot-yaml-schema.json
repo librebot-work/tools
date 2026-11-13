@@ -41,6 +41,16 @@
         }
       }
     },
+    "completionJudge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instructions"],
+      "description": "Optional authoritative task completion judge using the task's full tools. Omit to disable automatic completion.",
+      "properties": {
+        "instructions": { "type": "string", "minLength": 1, "maxLength": 20000, "pattern": "\\S" },
+        "modelRole": { "anyOf": [{ "enum": ["default", "smol", "slow", "plan"] }, { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$", "not": { "enum": ["vision", "commit", "tiny", "memory", "task", "advisor", "widget", "image", "web", "speech", "dictation", "judge", "__proto__", "constructor", "prototype"] } }], "default": "default", "description": "Must name a role declared in modelRoles, including custom roles. Defaults to default when omitted." }
+      }
+    },
     "workspace": {
       "type": "array",
       "maxItems": 10,

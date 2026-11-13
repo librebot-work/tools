@@ -179,6 +179,7 @@ export function exportBotFiles(
     description: description ?? "",
     ...(draft.icon !== undefined ? { icon: `./${iconPath(draft.icon)}` } : {}),
     modelRoles: modelRoles ?? [{ role: "default", label: "Main" }],
+    ...(draft.completionJudge !== undefined ? { completionJudge: draft.completionJudge } : {}),
     workspace: workspace ?? [],
     triggers: triggers ?? [],
     actions: actions ?? [],
