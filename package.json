@@ -36,5 +36,9 @@
     "image-size": "2.1.0",
     "saxes": "6.0.0",
     "yaml": "2.9.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/librebot-work/tools.git"
   }
 }
