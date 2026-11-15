@@ -186,10 +186,10 @@ triggers:
 Action capabilities are `read_issue`, `push_branch`, `propose_change`,
 `comment_issue`, `search_issues`, `read_change_request`, `read_repository`,
 `update_issue_labels`, `react_issue`, `update_issue_body`, `update_issue_title`,
-`publish_attachments` (GitHub only: uploads task-local SVG/PNG files as issue
-attachments, posts one comment embedding them, and optionally transitions labels
-after the comment is confirmed; it needs an owner-linked upload token on the
-GitHub connection, and GitLab bindings are rejected), `merge_change_request`,
+`publish_attachments` (commits task-local SVG/PNG files to the dedicated
+`design-artifacts` branch, posts one comment with commit-addressed links, and
+optionally transitions labels after the comment is confirmed),
+`merge_change_request` (sha-guarded native merge on GitHub and GitLab),
 and `comment_change_request` (replies inside an existing change-request review
 thread by thread ID; top-level change-request comments use `comment_issue`
 with `targetKind: change_request`).
@@ -214,7 +214,7 @@ Legacy provider-specific action fields/kinds, derived IDs, and pinned trigger
 repositories are rejected. Messaging declarations are not implemented and are
 rejected by the runtime/schema.
 
-- `authorId` and the issue/PR creator's `authorId` are stable GitHub user IDs.
+- `authorId` and the issue/PR creator's `authorId` are stable provider user IDs.
   `isIssueAuthor` compares these IDs, not mutable logins; it is `null` when
   either identity is missing. On a PR it refers to that PR's creator.
 - `authorAssociation`, when present, is GitHub's relationship label, not an
@@ -223,7 +223,10 @@ rejected by the runtime/schema.
   `checkedAt`, and `status` (`verified` or `unknown`). It describes the
   comment author's current effective access to the bound repository, not the
   connection owner, App permissions, or access when the comment was posted.
-  Unknown authority uses `null` for permission, role, and `canPush`.
+  Unknown authority uses `null` for permission, role, and `canPush`. On GitLab
+  it is the author's effective project membership by user ID: `roleName` is
+  the access level and `canPush` means Developer or above ("can push to the
+  repository", not "to protected branches").
 
 For requirements acceptance/revisions, require `isIssueAuthor === true`.
 For a ready-for-development decision, require
@@ -295,15 +298,19 @@ recreate that configuration when a release is ready.
   `edit_event`, `cancel_event`, `manage_attendees`). Capability namespaces are
   exclusive to their kind. Drive bindings are account-wide; calendar bindings
   pin exact calendar IDs with attendee/notification policy in owner instance
-  settings, never portable source. Version 0.4.8 adds this parser/schema
-  contract.
+  settings, never portable source. Version 0.4.9 is the first published
+  release with this parser/schema contract.
 - Version history: 0.4.1 added the WhatsApp parser/schema contract; 0.4.2
   replaces the scaffold README with a user-manual skeleton;
   0.4.3 adds the `publish_attachments` repository capability; 0.4.4 adds the
   `merge_change_request` repository capability and the
   `change_request.checks_updated` trigger event; 0.4.6 adds custom model role
   ids (up to 8 roles including `default`; workspace defaults stay built-in-only
-  while custom roles require explicit instance bindings).
+  while custom roles require explicit instance bindings); 0.4.9 publishes the
+  Google action kinds, optional `completionJudge`, the `comment_change_request`
+  capability, and `GITREPO_TRIGGER_EVENT_SOURCES`, and documents GitLab
+  parity for `merge_change_request`, `publish_attachments`, and author
+  authority (no contract change for those).
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
