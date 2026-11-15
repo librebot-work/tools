@@ -5,6 +5,7 @@ import { parseArgs } from "node:util";
 import { writeFile, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import {
+  GITREPO_TRIGGER_EVENT_SOURCES,
   readDirFiles,
   scaffoldBot,
   validateSource,
@@ -16,6 +17,18 @@ import {
   serializeLock,
 } from "../src/skills-lock.js";
 import { toBytes } from "../src/util.js";
+
+/** Provider subscriptions a gitrepo trigger needs, deduplicated in declaration order. */
+function providerEvents(trigger) {
+  if (trigger.kind !== "gitrepo") return undefined;
+  const github = new Set(), gitlab = new Set();
+  for (const event of trigger.eventTypes) {
+    const sources = GITREPO_TRIGGER_EVENT_SOURCES[event];
+    for (const name of sources?.github ?? []) github.add(name);
+    for (const name of sources?.gitlab ?? []) gitlab.add(name);
+  }
+  return { github: [...github], gitlab: [...gitlab] };
+}
 
 function fail(message, issues) {
   console.error(`error: ${message}`);
@@ -50,6 +63,9 @@ function previewShape(result) {
         content: undefined,
       })),
     },
+    triggerProviderEvents: Object.fromEntries(result.draft.triggers
+      .map((trigger) => [trigger.key, providerEvents(trigger)])
+      .filter(([, events]) => events !== undefined)),
     icon: result.icon ? (({ bytes, ...metadata }) => metadata)(result.icon) : undefined,
     assets: result.assets.map((a) => ({
       knowledgeId: a.knowledgeId,
@@ -132,6 +148,11 @@ async function cmdPreview(dir, json) {
     console.log("triggers:");
     for (const trigger of draft.triggers) {
       console.log(`  - ${trigger.label} [${trigger.key}; ${trigger.kind}] ${trigger.eventTypes.join(", ")}`);
+      const required = providerEvents(trigger);
+      if (required) {
+        console.log(`      GitHub App events: ${required.github.join(", ")}`);
+        console.log(`      GitLab webhook triggers: ${required.gitlab.join(", ")}`);
+      }
     }
   }
   if (draft.workspace.length > 0) {

@@ -12,7 +12,7 @@ export const REPO_CAPABILITIES: readonly [
   "read_issue", "push_branch", "propose_change", "comment_issue",
   "search_issues", "read_change_request", "read_repository",
   "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title",
-  "publish_attachments", "merge_change_request",
+  "publish_attachments", "merge_change_request", "comment_change_request",
 ];
 export const GITREPO_TRIGGER_EVENT_TYPES: readonly [
   "issue.opened", "issue.updated", "issue.closed", "issue.reopened",
@@ -23,8 +23,13 @@ export const GITREPO_TRIGGER_EVENT_TYPES: readonly [
   "change_request.comment.created", "change_request.comment.updated",
   "change_request.approval_changed", "repository.pushed",
 ];
+export const GITREPO_TRIGGER_EVENT_SOURCES: Readonly<Record<GitrepoTriggerEventType, { readonly github: readonly string[]; readonly gitlab: readonly string[] }>>;
 export const WHATSAPP_CAPABILITIES: readonly ["read_messages", "send_text", "set_reaction", "remove_reaction"];
 export const WHATSAPP_TRIGGER_EVENT_TYPES: readonly ["message.created", "reaction.changed"];
+export const GOOGLE_ACTION_KINDS: readonly ["google_docs", "google_sheets", "google_calendar"];
+export const GOOGLE_DOCS_CAPABILITIES: readonly ["search_documents", "read_document", "create_document", "edit_document"];
+export const GOOGLE_SHEETS_CAPABILITIES: readonly ["search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas"];
+export const GOOGLE_CALENDAR_CAPABILITIES: readonly ["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"];
 
 export type BuiltInModelRoleId = typeof MODEL_ROLES[number];
 export type ModelRoleId = string;
@@ -32,3 +37,7 @@ export type RepoCapability = typeof REPO_CAPABILITIES[number];
 export type GitrepoTriggerEventType = typeof GITREPO_TRIGGER_EVENT_TYPES[number];
 export type WhatsAppCapability = typeof WHATSAPP_CAPABILITIES[number];
 export type WhatsAppTriggerEventType = typeof WHATSAPP_TRIGGER_EVENT_TYPES[number];
+export type GoogleActionKind = typeof GOOGLE_ACTION_KINDS[number];
+export type GoogleDocsCapability = typeof GOOGLE_DOCS_CAPABILITIES[number];
+export type GoogleSheetsCapability = typeof GOOGLE_SHEETS_CAPABILITIES[number];
+export type GoogleCalendarCapability = typeof GOOGLE_CALENDAR_CAPABILITIES[number];

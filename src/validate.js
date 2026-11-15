@@ -10,8 +10,18 @@ import { sha256Hex } from "./util.js";
 import {
   MAX_MODEL_ROLES, REPO_CAPABILITIES, GITREPO_TRIGGER_EVENT_TYPES,
   WHATSAPP_CAPABILITIES, WHATSAPP_TRIGGER_EVENT_TYPES,
+  GOOGLE_ACTION_KINDS, GOOGLE_DOCS_CAPABILITIES, GOOGLE_SHEETS_CAPABILITIES,
+  GOOGLE_CALENDAR_CAPABILITIES,
   isModelRoleId,
 } from "./contract.js";
+const ACTION_CAPABILITIES = {
+  gitrepo: REPO_CAPABILITIES,
+  whatsapp: WHATSAPP_CAPABILITIES,
+  google_docs: GOOGLE_DOCS_CAPABILITIES,
+  google_sheets: GOOGLE_SHEETS_CAPABILITIES,
+  google_calendar: GOOGLE_CALENDAR_CAPABILITIES,
+};
+const ACTION_KINDS = ["gitrepo", "whatsapp", ...GOOGLE_ACTION_KINDS];
 
 const ENTRY_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const INPUT_KEY_RE = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
@@ -575,8 +585,8 @@ export function validateActions(input, sink, file) {
     checkKeys(entry, ["key", "kind", "label", "capabilities"], field, sink, file);
     const key = entryId(entry.key, `${field}.key`, sink, file);
     const label = optionalText(entry.label, `${field}.label`, 100, sink, file);
-    if (entry.kind !== "gitrepo" && entry.kind !== "whatsapp") err(sink, file, `${field}.kind`, "must be gitrepo or whatsapp");
-    const supported = entry.kind === "whatsapp" ? WHATSAPP_CAPABILITIES : REPO_CAPABILITIES;
+    if (!ACTION_KINDS.includes(entry.kind)) err(sink, file, `${field}.kind`, "must be gitrepo, whatsapp, google_docs, google_sheets, or google_calendar");
+    const supported = ACTION_CAPABILITIES[entry.kind] ?? REPO_CAPABILITIES;
     if (key === undefined) return;
     if (seen.has(key)) err(sink, file, `${field}.key`, `contains duplicate key ${key}`);
     seen.add(key);

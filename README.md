@@ -146,9 +146,13 @@ import {
   `BUILT_IN_MODEL_ROLES` (alias), `MAX_MODEL_ROLES` (8),
   `CUSTOM_MODEL_ROLE_ID_RE`, `isBuiltInModelRole`, `isCustomModelRoleId`,
   `isModelRoleId`, plus `REPO_CAPABILITIES`, `GITREPO_TRIGGER_EVENT_TYPES`,
-  `WHATSAPP_CAPABILITIES`, `WHATSAPP_TRIGGER_EVENT_TYPES` (frozen arrays), and
+  `WHATSAPP_CAPABILITIES`, `WHATSAPP_TRIGGER_EVENT_TYPES`,
+  `GOOGLE_ACTION_KINDS`, `GOOGLE_DOCS_CAPABILITIES`,
+  `GOOGLE_SHEETS_CAPABILITIES`, `GOOGLE_CALENDAR_CAPABILITIES` (frozen arrays), and
   the derived `ModelRoleId` (generic string: built-in or custom),
   `BuiltInModelRoleId`, `RepoCapability`, `WhatsAppCapability`,
+  `GoogleActionKind`, `GoogleDocsCapability`, `GoogleSheetsCapability`,
+  `GoogleCalendarCapability`,
   `GitrepoTriggerEventType`, and `WhatsAppTriggerEventType` types. The root
   entry re-exports the same values.
 - No author-configured shell commands are executed. Standard skill
@@ -185,8 +189,10 @@ Action capabilities are `read_issue`, `push_branch`, `propose_change`,
 `publish_attachments` (GitHub only: uploads task-local SVG/PNG files as issue
 attachments, posts one comment embedding them, and optionally transitions labels
 after the comment is confirmed; it needs an owner-linked upload token on the
-GitHub connection, and GitLab bindings are rejected), and
-`merge_change_request`.
+GitHub connection, and GitLab bindings are rejected), `merge_change_request`,
+and `comment_change_request` (replies inside an existing change-request review
+thread by thread ID; top-level change-request comments use `comment_issue`
+with `targetKind: change_request`).
 Groups require at least one capability; at most 20 groups are accepted.
 API-only actions do not require workspace. Platform bindings select the provider,
 connection, numeric repository identity, and optional checkout independently.
@@ -200,7 +206,10 @@ Semantic trigger events are `issue.opened`, `issue.updated`, `issue.closed`,
 `change_request.commits_updated`, `change_request.checks_updated`,
 `change_request.comment.created`,
 `change_request.comment.updated`, `change_request.approval_changed`, and
-`repository.pushed`. Repository selection belongs only in instance bindings.
+`repository.pushed`. `GITREPO_TRIGGER_EVENT_SOURCES` maps each event to the
+GitHub App event subscriptions and GitLab webhook triggers that deliver it;
+`librebot preview` prints them per trigger (`triggerProviderEvents` in
+`--json`). Repository selection belongs only in instance bindings.
 Legacy provider-specific action fields/kinds, derived IDs, and pinned trigger
 repositories are rejected. Messaging declarations are not implemented and are
 rejected by the runtime/schema.
@@ -277,18 +286,24 @@ recreate that configuration when a release is ready.
   `send_text`, `set_reaction`, and `remove_reaction`. Repository capabilities
   remain exclusive to `gitrepo`. Exact sender-phone bindings, independent read
   context, destination policies, and automated-write consent belong to owner
-  instance settings, never portable source. Version 0.4.1 added this parser/schema
-  contract; 0.4.2 replaces the scaffold README with a user-manual skeleton;
+  instance settings, never portable source.
+- Portable `actions` also accept `kind: google_docs` (`search_documents`,
+  `read_document`, `create_document`, `edit_document`), `kind: google_sheets`
+  (`search_spreadsheets`, `read_spreadsheet`, `create_spreadsheet`,
+  `write_values`, `append_values`, `write_formulas`), and
+  `kind: google_calendar` (`search_events`, `read_event`, `create_event`,
+  `edit_event`, `cancel_event`, `manage_attendees`). Capability namespaces are
+  exclusive to their kind. Drive bindings are account-wide; calendar bindings
+  pin exact calendar IDs with attendee/notification policy in owner instance
+  settings, never portable source. Version 0.4.8 adds this parser/schema
+  contract.
+- Version history: 0.4.1 added the WhatsApp parser/schema contract; 0.4.2
+  replaces the scaffold README with a user-manual skeleton;
   0.4.3 adds the `publish_attachments` repository capability; 0.4.4 adds the
   `merge_change_request` repository capability and the
   `change_request.checks_updated` trigger event; 0.4.6 adds custom model role
   ids (up to 8 roles including `default`; workspace defaults stay built-in-only
   while custom roles require explicit instance bindings).
-  Custom-role sources require tooling at 0.4.6 or newer; 0.4.5 accepts only
-  `default`, `smol`, `slow`, `plan`.
-  Version 0.4.7 adds optional `completionJudge`; this source artifact must be
-  integrated into the platform before using that field. An unpublished local
-  package can be installed from its `npm pack` archive without registry access.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
