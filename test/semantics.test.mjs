@@ -44,10 +44,28 @@ describe("semantic cross-references", () => {
   });
 
   it("accepts every portable repository capability", async () => {
-    const capabilities = ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request", "comment_change_request"];
+    const capabilities = ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request", "comment_change_request", "read_issue_artifacts", "write_issue_artifacts"];
     const result = await base(`workspace: [{key: source, path: ./code}]\nactions: [{key: repo, kind: gitrepo, capabilities: ${JSON.stringify(capabilities)}}]\n`);
     assert.equal(result.ok, true);
     assert.deepEqual(result.draft.actions[0].capabilities, capabilities);
+  });
+
+  it("requires read_issue_artifacts in the same group as write_issue_artifacts", async () => {
+    const writeOnly = await base("actions: [{key: repo, kind: gitrepo, capabilities: [write_issue_artifacts]}]\n");
+    assert.equal(writeOnly.ok, false);
+    assert.ok(writeOnly.errors.some((e) => e.field === "actions[0].capabilities" && e.message.includes("read_issue_artifacts")));
+    const writeSplit = await base("actions: [{key: reads, kind: gitrepo, capabilities: [read_issue_artifacts]}, {key: writes, kind: gitrepo, capabilities: [write_issue_artifacts]}]\n");
+    assert.equal(writeSplit.ok, false);
+    const writeGrouped = await base("actions: [{key: repo, kind: gitrepo, capabilities: [read_issue_artifacts, write_issue_artifacts]}]\n");
+    assert.equal(writeGrouped.ok, true);
+    const readOnly = await base("actions: [{key: repo, kind: gitrepo, capabilities: [read_issue_artifacts]}]\n");
+    assert.equal(readOnly.ok, true);
+  });
+
+  it("rejects issue artifact capabilities outside gitrepo actions", async () => {
+    for (const kind of ["whatsapp", "google_docs", "google_sheets", "google_calendar"]) {
+      assert.equal((await base(`actions: [{key: group, kind: ${kind}, capabilities: [read_issue_artifacts]}]\n`)).ok, false, kind);
+    }
   });
 
   it("parses and validates a bot authored with merge_change_request and change_request.checks_updated", async () => {

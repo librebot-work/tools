@@ -603,6 +603,13 @@ export function validateActions(input, sink, file) {
         err(sink, file, `${field}.capabilities`, "contains duplicates");
       } else capabilities.add(capability);
     });
+    if (
+      entry.kind === "gitrepo" &&
+      capabilities.has("write_issue_artifacts") &&
+      !capabilities.has("read_issue_artifacts")
+    ) {
+      err(sink, file, `${field}.capabilities`, "write_issue_artifacts requires read_issue_artifacts in the same action group");
+    }
     out.push({ key, kind: entry.kind, ...(label === undefined ? {} : { label }), capabilities: [...capabilities] });
   });
   return out;

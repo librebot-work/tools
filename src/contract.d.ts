@@ -13,6 +13,7 @@ export const REPO_CAPABILITIES: readonly [
   "search_issues", "read_change_request", "read_repository",
   "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title",
   "publish_attachments", "merge_change_request", "comment_change_request",
+  "read_issue_artifacts", "write_issue_artifacts",
 ];
 export const GITREPO_TRIGGER_EVENT_TYPES: readonly [
   "issue.opened", "issue.updated", "issue.closed", "issue.reopened",
