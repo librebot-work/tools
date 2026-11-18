@@ -280,17 +280,35 @@ The npm package's Trusted Publisher must authorize organization `librebot-work`,
 repository `tools`, workflow filename `publish.yml`, with direct `npm publish`
 allowed and no environment name.
 
-After the compatible platform contract is ready, commit the version change and
-lockfile, merge it to `main`, then push a matching stable version tag:
+Publish every tools release to npm through this workflow. A Git tag or local
+tarball is not a distribution channel for Librebot or bot authors.
 
-```sh
-git tag v0.4.7
-git push origin v0.4.7
-```
+1. Update `package.json` and `package-lock.json` to a new stable version
+   (`npm version <version> --no-git-tag-version`), then run `npm ci --ignore-scripts`,
+   `npm test`, and `npm pack --dry-run`. Commit and merge the release to `main`.
+2. Fetch `origin/main` and tag the merged release commit, not a local draft.
+   For example, if the tip of `main` is the `0.4.12` release:
 
-Use the new package version, not an already published version. The workflow
-requires the tag to match `package.json` and point to a commit reachable from
-`main`, installs dependencies, runs tests, inspects the package, and publishes.
+   ```sh
+   git fetch origin main
+   git tag v0.4.12 origin/main
+   git push origin refs/tags/v0.4.12
+   ```
+
+3. Check the **Publish npm package** workflow for the tag. It verifies the
+   tag and its ancestry, tests and inspects the package, then publishes it.
+   Before updating platform pins or announcing the release, verify npm serves
+   the version and `latest` points to it:
+
+   ```sh
+   npm view librebot-tools@0.4.12 version --prefer-online
+   npm view librebot-tools dist-tags --json --prefer-online
+   ```
+
+Do not run `npm login` or `npm publish` locally. If CI reports success but
+the registry does not yet serve the release, verify registry availability
+before trying to publish again; npm versions are immutable.
+
 Protect `main` and restrict creation/update/deletion of `v*` tags to release
 maintainers: pushing a release tag authorizes publishing. npm trusted publisher
 setup must complete its first successful publish within two days; otherwise
@@ -351,17 +369,10 @@ recreate that configuration when a release is ready.
 - `BotConnector.endpoint?` (remote MCP): the runtime must validate the
   bound connection's endpoint matches the declared endpoint.
 
-## Development and publishing
+## Development
 
-Node.js 24 or newer is required. From this repository, install the locked
-dependencies, run the tests, and inspect the package before publishing:
-
-```sh
-npm ci
-npm test
-npm pack --dry-run
-npm publish --access public
-```
+Node.js 24 or newer is required. Use `npm ci --ignore-scripts` and `npm test`
+for local development. Follow [Publishing](#publishing) for releases.
 
 ## Tests
 
