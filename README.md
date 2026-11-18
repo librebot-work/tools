@@ -309,15 +309,22 @@ recreate that configuration when a release is ready.
   context, destination policies, and automated-write consent belong to owner
   instance settings, never portable source.
 - Portable `actions` also accept `kind: google_docs` (`search_documents`,
-  `read_document`, `create_document`, `edit_document`), `kind: google_sheets`
+  `read_document`, `create_document`, `edit_document_content`,
+  `format_document`), `kind: google_sheets`
   (`search_spreadsheets`, `read_spreadsheet`, `create_spreadsheet`,
-  `write_values`, `append_values`, `write_formulas`), and
+  `write_values`, `append_values`, `write_formulas`, `format_cells`), and
   `kind: google_calendar` (`search_events`, `read_event`, `create_event`,
   `edit_event`, `cancel_event`, `manage_attendees`). Capability namespaces are
-  exclusive to their kind. Drive bindings are account-wide; calendar bindings
-  pin exact calendar IDs with attendee/notification policy in owner instance
-  settings, never portable source. Version 0.4.9 is the first published
-  release with this parser/schema contract.
+  exclusive to their kind. Content and style are separate grants: Docs
+  `edit_document_content` covers text insertion, replacement, and deletion via
+  `google_edit_document`, while `format_document` covers text and named
+  heading styles via `google_format_document`; Sheets keeps literal
+  `write_values`, `write_formulas`, and `format_cells` as separate grants.
+  Drive bindings are account-wide; calendar bindings pin exact calendar IDs
+  with attendee/notification policy in owner instance settings, never
+  portable source. The broad Docs `edit_document` grant is removed: sources
+  declaring it fail validation and must declare `edit_document_content`,
+  `format_document`, or both.
 - Version history: 0.4.1 added the WhatsApp parser/schema contract; 0.4.2
   replaces the scaffold README with a user-manual skeleton;
   0.4.3 adds the `publish_attachments` repository capability; 0.4.4 adds the
@@ -331,7 +338,10 @@ recreate that configuration when a release is ready.
   authority (no contract change for those); 0.4.10 adds the
   `read_issue_artifacts` and `write_issue_artifacts` repository capabilities
   for GitHub-native issue artifacts (write declarations require read in the
-  same action group).
+  same action group); 0.4.12 replaces the broad Docs `edit_document` grant
+  with separate `edit_document_content` (text edits) and `format_document`
+  (text and named heading styles) grants, and adds the Sheets `format_cells`
+  grant for cell colors independent of value and formula writes.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
