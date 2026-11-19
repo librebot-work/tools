@@ -346,9 +346,13 @@ recreate that configuration when a release is ready.
   `edit_event`, `cancel_event`, `manage_attendees`). Capability namespaces are
   exclusive to their kind. Content and style are separate grants: Docs
   `edit_document_content` covers text insertion, replacement, and deletion via
-  `google_edit_document`, while `format_document` covers text and named
-  heading styles via `google_format_document`; Sheets keeps literal
-  `write_values`, `write_formulas`, and `format_cells` as separate grants.
+  `google_edit_document`, while `format_document` covers Docs formatting via
+  `google_format_document`, which takes native `updateTextStyle` /
+  `updateParagraphStyle` requests with exact reviewed `fields` masks, one
+  explicit tab, and the read revision; a batch containing anything outside
+  formatting (links, content, or structural requests) is refused in full.
+  Sheets keeps literal `write_values`, `write_formulas`, and `format_cells`
+  as separate grants.
   Drive bindings are account-wide; calendar bindings pin exact calendar IDs
   with attendee/notification policy in owner instance settings, never
   portable source. The broad Docs `edit_document` grant is removed: sources
