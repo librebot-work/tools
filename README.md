@@ -352,7 +352,10 @@ recreate that configuration when a release is ready.
   explicit tab, and the read revision; a batch containing anything outside
   formatting (links, content, or structural requests) is refused in full.
   Sheets keeps literal `write_values`, `write_formulas`, and `format_cells`
-  as separate grants.
+  as separate grants. `google_format_cells` takes native `repeatCell` and
+  `updateBorders` requests on one sheet ID. Exact `userEnteredFormat` masks
+  allow fonts, colors, number formats, and layout without access to cell
+  values, formulas, or structural edits.
   Drive bindings are account-wide; calendar bindings pin exact calendar IDs
   with attendee/notification policy in owner instance settings, never
   portable source. The broad Docs `edit_document` grant is removed: sources
