@@ -42,3 +42,8 @@ export type GoogleActionKind = typeof GOOGLE_ACTION_KINDS[number];
 export type GoogleDocsCapability = typeof GOOGLE_DOCS_CAPABILITIES[number];
 export type GoogleSheetsCapability = typeof GOOGLE_SHEETS_CAPABILITIES[number];
 export type GoogleCalendarCapability = typeof GOOGLE_CALENDAR_CAPABILITIES[number];
+export const UPGRADE_PRIORITIES: readonly ["action", "notable"];
+export const MAX_UPGRADE_SUMMARY_CODEPOINTS: 280;
+export function validateUpgradeNote(summary: unknown, priority: unknown): void;
+
+export type UpgradePriority = typeof UPGRADE_PRIORITIES[number];

@@ -76,3 +76,45 @@ export const GOOGLE_ACTION_KINDS = Object.freeze(["google_docs", "google_sheets"
 export const GOOGLE_DOCS_CAPABILITIES = Object.freeze(["search_documents", "read_document", "create_document", "edit_document_content", "format_document"]);
 export const GOOGLE_SHEETS_CAPABILITIES = Object.freeze(["search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells"]);
 export const GOOGLE_CALENDAR_CAPABILITIES = Object.freeze(["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"]);
+
+// Author-written release note for the next publish: one trimmed line of
+// plain text (1-280 Unicode code points). `upgradePriority` ("action" for a
+// concrete user step, "notable" for a material change needing no step)
+// requires a summary. Both fields are optional; releases without
+// user-visible changes omit them. Server-resolved `sourceCommit`/`sourceTag`
+// are never author input. Shared with platform validation and Git history
+// so every surface enforces identical rules; platform catches the thrown
+// Error as badRequest.
+export const UPGRADE_PRIORITIES = Object.freeze(["action", "notable"]);
+export const MAX_UPGRADE_SUMMARY_CODEPOINTS = 280;
+// C0/C1 controls, line/paragraph separators: single-line plain text only.
+const UPGRADE_SUMMARY_CONTROL_RE = new RegExp("[" + String.fromCharCode(0) + "-" + String.fromCharCode(31) + String.fromCharCode(127) + "-" + String.fromCharCode(159) + String.fromCharCode(8232) + String.fromCharCode(8233) + "]");
+/**
+ * Validate an author-written upgrade note. Throws an Error whose message
+ * names the offending field (`upgradeSummary` or `upgradePriority`).
+ * @param {unknown} summary
+ * @param {unknown} priority
+ */
+export function validateUpgradeNote(summary, priority) {
+  if (summary === undefined) {
+    if (priority === undefined) return;
+    throw new Error("upgradePriority requires upgradeSummary");
+  }
+  if (typeof summary !== "string") {
+    throw new Error("upgradeSummary must be a string");
+  }
+  const trimmed = summary.trim();
+  if (!trimmed) {
+    throw new Error("upgradeSummary must not be empty");
+  }
+  if ([...trimmed].length > MAX_UPGRADE_SUMMARY_CODEPOINTS) {
+    throw new Error(`upgradeSummary must be at most ${MAX_UPGRADE_SUMMARY_CODEPOINTS} characters`);
+  }
+  if (UPGRADE_SUMMARY_CONTROL_RE.test(trimmed)) {
+    throw new Error("upgradeSummary must be single-line plain text without control or separator characters");
+  }
+  if (priority === undefined) return;
+  if (priority !== "action" && priority !== "notable") {
+    throw new Error('upgradePriority must be "action" or "notable"');
+  }
+}

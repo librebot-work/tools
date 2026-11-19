@@ -54,7 +54,12 @@ export interface BotCompletionJudge {
   modelRole?: ModelRoleId;
 }
 
-export interface BotDraft {
+export interface BotUpgradeText {
+  upgradeSummary?: string;
+  upgradePriority?: "action" | "notable";
+}
+
+export interface BotDraft extends BotUpgradeText {
   name: string;
   description: string;
   botPrompt: string;
@@ -71,7 +76,6 @@ export interface BotDraft {
   actions: Array<{ key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] } | { key: string; kind: "whatsapp"; label?: string; capabilities: WhatsAppCapability[] } | { key: string; kind: "google_docs"; label?: string; capabilities: GoogleDocsCapability[] } | { key: string; kind: "google_sheets"; label?: string; capabilities: GoogleSheetsCapability[] } | { key: string; kind: "google_calendar"; label?: string; capabilities: GoogleCalendarCapability[] }>;
   icon?: string;
 }
-
 export interface KnowledgeAsset {
   knowledgeId: string;
   path: string;

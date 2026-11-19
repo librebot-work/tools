@@ -4,6 +4,7 @@
 import { mkdir, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
+import { validateUpgradeNote } from "./contract.js";
 import { toBytes } from "./util.js";
 import { DEFAULT_ICON, iconPath, validateIcon } from "./icon.js";
 
@@ -127,6 +128,10 @@ export function exportBotFiles(
   if (typeof draft.readme !== "string" || !draft.readme.trim()) {
     throw new Error("export requires a non-empty draft readme");
   }
+  // Author-written release note only: invalid notes fail export, and
+  // server-resolved sourceCommit/sourceTag (or visibility) on a stored Bot
+  // are never written back to source.
+  validateUpgradeNote(draft.upgradeSummary, draft.upgradePriority);
   const readme = draft.readme.trim();
   if (readme.length > 100000) {
     throw new Error("draft readme is too long (max 100000 chars)");
@@ -177,6 +182,8 @@ export function exportBotFiles(
     formatVersion: 1,
     name,
     description: description ?? "",
+    ...(typeof draft.upgradeSummary === "string" ? { upgradeSummary: draft.upgradeSummary.trim() } : {}),
+    ...(draft.upgradePriority === "action" || draft.upgradePriority === "notable" ? { upgradePriority: draft.upgradePriority } : {}),
     ...(draft.icon !== undefined ? { icon: `./${iconPath(draft.icon)}` } : {}),
     modelRoles: modelRoles ?? [{ role: "default", label: "Main" }],
     ...(draft.completionJudge !== undefined ? { completionJudge: draft.completionJudge } : {}),

@@ -51,9 +51,11 @@ export {
   CUSTOM_MODEL_ROLE_ID_RE,
   FORMAT_VERSION,
   MAX_MODEL_ROLES,
+  MAX_UPGRADE_SUMMARY_CODEPOINTS,
   MODEL_ROLES,
   REPO_CAPABILITIES,
   RESERVED_MODEL_ROLE_IDS,
+  UPGRADE_PRIORITIES,
   GITREPO_TRIGGER_EVENT_SOURCES,
   GITREPO_TRIGGER_EVENT_TYPES,
   GOOGLE_ACTION_KINDS,
@@ -66,5 +68,6 @@ export {
   isCustomModelRoleId,
   isModelRoleId,
   isReservedModelRoleId,
+  validateUpgradeNote,
 } from "./contract.js";
 export { validateKnowledgeSources, validateRequirements } from "./validate.js";

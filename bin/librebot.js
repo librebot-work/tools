@@ -122,6 +122,7 @@ async function cmdPreview(dir, json) {
   const { draft } = result;
   console.log(`# ${draft.name}`);
   console.log(`${draft.description}\n`);
+  if (draft.upgradeSummary) console.log(`release note${draft.upgradePriority ? ` [${draft.upgradePriority}]` : ""}: ${draft.upgradeSummary}`);
   console.log(`prompt: instructions.md (${draft.botPrompt.length} chars)`);
   if (result.icon) console.log(`icon: ${result.icon.path} ${result.icon.mime} ${result.icon.width}×${result.icon.height} ${result.icon.size}B sha256:${result.icon.sha256}`);
   console.log(`roles: ${draft.modelRoles.map((r) => r.role).join(", ")}`);

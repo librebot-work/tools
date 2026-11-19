@@ -6,10 +6,22 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["formatVersion", "name", "description", "modelRoles"],
+  "dependentRequired": { "upgradePriority": ["upgradeSummary"] },
   "properties": {
     "formatVersion": { "const": 1 },
     "name": { "type": "string", "minLength": 1, "maxLength": 100 },
     "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+    "upgradeSummary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 280,
+      "pattern": "^(?=.*\\S)[^\\u0000-\\u001f\\u007f-\\u009f\\u2028\\u2029]+(?![\\s\\S])",
+      "description": "Author-written release note for the next publish: one trimmed line of plain text, 1-280 Unicode code points, no control or separator characters. Omit for releases without user-visible changes. Semantic validation trims surrounding whitespace, counts code points, and rejects multi-line or control content."
+    },
+    "upgradePriority": {
+      "enum": ["action", "notable"],
+      "description": "Highlights the upgradeSummary: action for a concrete user step, notable for a material change needing no step. Requires upgradeSummary."
+    },
     "icon": {
       "type": "string",
       "minLength": 1,

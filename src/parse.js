@@ -11,7 +11,7 @@ import { checkSourcesLock, parseSourcesYaml } from "./skills-lock.js";
 import { sha256Hex, toBytes } from "./util.js";
 import { vendorContentHash } from "./skills-import.js";
 import { iconPath, validateIcon } from "./icon.js";
-import { FORMAT_VERSION } from "./contract.js";
+import { FORMAT_VERSION, validateUpgradeNote } from "./contract.js";
 import {
   entryId,
   requiredString,
@@ -38,6 +38,8 @@ const TOP_LEVEL_KEYS = [
   "formatVersion",
   "name",
   "description",
+  "upgradeSummary",
+  "upgradePriority",
   "icon",
   "modelRoles",
   "completionJudge",
@@ -271,6 +273,23 @@ export async function validateFiles(input) {
     sink,
     FILE_BOT_YAML,
   );
+  // Author-written release note for the next publish. Shared rules live in
+  // contract.validateUpgradeNote; the trimmed summary is what the draft and
+  // export carry. Server-resolved sourceCommit/sourceTag are never source.
+  let upgradeSummary;
+  let upgradePriority;
+  try {
+    validateUpgradeNote(botDoc.upgradeSummary, botDoc.upgradePriority);
+    if (typeof botDoc.upgradeSummary === "string") upgradeSummary = botDoc.upgradeSummary.trim();
+    if (botDoc.upgradePriority === "action" || botDoc.upgradePriority === "notable") upgradePriority = botDoc.upgradePriority;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    errors.push({
+      file: FILE_BOT_YAML,
+      field: message.startsWith("upgradePriority") ? "upgradePriority" : "upgradeSummary",
+      message,
+    });
+  }
   let icon;
   if (botDoc.icon !== undefined) {
     try {
@@ -597,6 +616,8 @@ export async function validateFiles(input) {
   const draft = {
     name,
     description,
+    ...(upgradeSummary !== undefined ? { upgradeSummary } : {}),
+    ...(upgradePriority !== undefined ? { upgradePriority } : {}),
     ...(icon ? { icon: `./${icon.path}` } : {}),
     botPrompt,
     readme,

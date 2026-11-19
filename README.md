@@ -83,6 +83,14 @@ Rules:
   including custom roles. Omitting the judge disables automatic completion.
   Export/import preserves the optional judge and omitted role without inventing
   defaults. Invalid or failed judge output leaves the task open.
+- Optional `upgradeSummary` (one trimmed line of plain text, 1–280 Unicode
+  code points, no control or separator characters) with optional
+  `upgradePriority` (`action` for a concrete user step, `notable` for a
+  material change needing no step). The priority requires a summary; omit
+  both for releases without user-visible changes. The same rules are exported
+  as `validateUpgradeNote(summary, priority)` from `librebot-tools/contract`
+  for platform validation and Git history. Server-resolved `sourceCommit` /
+  `sourceTag` are never source fields and are never exported.
 - `knowledge/README.md` is the index, not an entry. Every other file under
   `knowledge/` is one knowledge asset: UTF-8 text inlines as `content`;
   anything else is returned as an `assets[]` entry
@@ -148,11 +156,14 @@ import {
   `isModelRoleId`, plus `REPO_CAPABILITIES`, `GITREPO_TRIGGER_EVENT_TYPES`,
   `WHATSAPP_CAPABILITIES`, `WHATSAPP_TRIGGER_EVENT_TYPES`,
   `GOOGLE_ACTION_KINDS`, `GOOGLE_DOCS_CAPABILITIES`,
-  `GOOGLE_SHEETS_CAPABILITIES`, `GOOGLE_CALENDAR_CAPABILITIES` (frozen arrays), and
-  the derived `ModelRoleId` (generic string: built-in or custom),
+  `GOOGLE_SHEETS_CAPABILITIES`, `GOOGLE_CALENDAR_CAPABILITIES` (frozen arrays),
+  `UPGRADE_PRIORITIES`, `MAX_UPGRADE_SUMMARY_CODEPOINTS`, and
+  `validateUpgradeNote(summary, priority)` (throws a field-specific Error;
+  shared with platform validation and Git history), and the derived
+  `ModelRoleId` (generic string: built-in or custom),
   `BuiltInModelRoleId`, `RepoCapability`, `WhatsAppCapability`,
   `GoogleActionKind`, `GoogleDocsCapability`, `GoogleSheetsCapability`,
-  `GoogleCalendarCapability`,
+  `GoogleCalendarCapability`, `UpgradePriority`,
   `GitrepoTriggerEventType`, and `WhatsAppTriggerEventType` types. The root
   entry re-exports the same values.
 - No author-configured shell commands are executed. Standard skill
@@ -287,12 +298,12 @@ tarball is not a distribution channel for Librebot or bot authors.
    (`npm version <version> --no-git-tag-version`), then run `npm ci --ignore-scripts`,
    `npm test`, and `npm pack --dry-run`. Commit and merge the release to `main`.
 2. Fetch `origin/main` and tag the merged release commit, not a local draft.
-   For example, if the tip of `main` is the `0.4.12` release:
+   For example, if the tip of `main` is the `0.4.13` release:
 
    ```sh
    git fetch origin main
-   git tag v0.4.12 origin/main
-   git push origin refs/tags/v0.4.12
+   git tag v0.4.13 origin/main
+   git push origin refs/tags/v0.4.13
    ```
 
 3. Check the **Publish npm package** workflow for the tag. It verifies the
@@ -301,7 +312,7 @@ tarball is not a distribution channel for Librebot or bot authors.
    the version and `latest` points to it:
 
    ```sh
-   npm view librebot-tools@0.4.12 version --prefer-online
+   npm view librebot-tools@0.4.13 version --prefer-online
    npm view librebot-tools dist-tags --json --prefer-online
    ```
 
@@ -359,7 +370,10 @@ recreate that configuration when a release is ready.
   same action group); 0.4.12 replaces the broad Docs `edit_document` grant
   with separate `edit_document_content` (text edits) and `format_document`
   (text and named heading styles) grants, and adds the Sheets `format_cells`
-  grant for cell colors independent of value and formula writes.
+  grant for cell colors independent of value and formula writes; 0.4.13 adds
+  the optional `upgradeSummary` release note with `upgradePriority`
+  (`action` | `notable`, requires a summary) and the shared
+  `validateUpgradeNote` contract helper.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
