@@ -374,6 +374,12 @@ recreate that configuration when a release is ready.
   the optional `upgradeSummary` release note with `upgradePriority`
   (`action` | `notable`, requires a summary) and the shared
   `validateUpgradeNote` contract helper.
+- Clock triggers use `kind: cron`, `eventTypes: [cron.tick]`, and the usual
+  `key`, `label`, and `deciderInstructions`. An optional
+  `schedule: { expression: "0 9 * * 1-5", timeZone: America/New_York }`
+  suggests 09:00 on local weekdays. The installed binding must be enabled
+  with an explicit schedule to receive ticks. Five-field cron supports minute
+  precision; local DST gaps are skipped and repeated minutes fire only once.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
