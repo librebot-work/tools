@@ -344,15 +344,20 @@ recreate that configuration when a release is ready.
   `write_values`, `append_values`, `write_formulas`, `format_cells`), and
   `kind: google_calendar` (`search_events`, `read_event`, `create_event`,
   `edit_event`, `cancel_event`, `manage_attendees`). Capability namespaces are
-  exclusive to their kind. Content and style are separate grants: Docs
+  exclusive to their kind.
+  Model-facing tools are named `google_<product>_<verb>_<object>` (`docs`,
+  `sheets`, `calendar`); grants are unchanged, and `google_get_operation`
+  is shared. `google_calendar_replace_event_attendees` replaces the whole
+  list under `manage_attendees`.
+  Content and style are separate grants: Docs
   `edit_document_content` covers text insertion, replacement, and deletion via
-  `google_edit_document`, while `format_document` covers Docs formatting via
-  `google_format_document`, which takes native `updateTextStyle` /
+  `google_docs_edit_document_content`, while `format_document` covers Docs formatting via
+  `google_docs_format_document`, which takes native `updateTextStyle` /
   `updateParagraphStyle` requests with exact reviewed `fields` masks, one
   explicit tab, and the read revision; a batch containing anything outside
   formatting (links, content, or structural requests) is refused in full.
   Sheets keeps literal `write_values`, `write_formulas`, and `format_cells`
-  as separate grants. `google_format_cells` takes native `repeatCell` and
+  as separate grants. `google_sheets_format_cells` takes native `repeatCell` and
   `updateBorders` requests on one sheet ID. Exact `userEnteredFormat` masks
   allow fonts, colors, number formats, and layout without access to cell
   values, formulas, or structural edits.
