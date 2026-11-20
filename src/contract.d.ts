@@ -47,3 +47,10 @@ export const MAX_UPGRADE_SUMMARY_CODEPOINTS: 280;
 export function validateUpgradeNote(summary: unknown, priority: unknown): void;
 
 export type UpgradePriority = typeof UPGRADE_PRIORITIES[number];
+export type { CronSchedule } from "./cron.js";
+export {
+  CRON_TRIGGER_EVENT_TYPES,
+  validateCronSchedule,
+  nextCronOccurrence,
+  latestCronOccurrence,
+} from "./cron.js";

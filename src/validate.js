@@ -10,9 +10,10 @@ import { sha256Hex } from "./util.js";
 import {
   MAX_MODEL_ROLES, REPO_CAPABILITIES, GITREPO_TRIGGER_EVENT_TYPES,
   WHATSAPP_CAPABILITIES, WHATSAPP_TRIGGER_EVENT_TYPES,
+  CRON_TRIGGER_EVENT_TYPES,
   GOOGLE_ACTION_KINDS, GOOGLE_DOCS_CAPABILITIES, GOOGLE_SHEETS_CAPABILITIES,
   GOOGLE_CALENDAR_CAPABILITIES,
-  isModelRoleId,
+  isModelRoleId, validateCronSchedule,
 } from "./contract.js";
 const ACTION_CAPABILITIES = {
   gitrepo: REPO_CAPABILITIES,
@@ -707,6 +708,27 @@ function validateInputField(entry, i, sink, file) {
   if (help !== undefined) out.help = help;
   return out;
 }
+// Author-suggested cron schedule: structural shape here, five-field/IANA
+// semantics delegated to the contract evaluator. Returns the normalized
+// schedule or undefined (after recording a sink error).
+function validateCronScheduleField(value, field, sink, file) {
+  if (!isRecord(value)) {
+    err(sink, file, field, "must be an object with expression and timeZone");
+    return undefined;
+  }
+  let normalized;
+  try {
+    normalized = validateCronSchedule(value);
+  } catch (error) {
+    err(sink, file, field, error instanceof Error ? error.message : String(error));
+    return undefined;
+  }
+  if (!isRecord(normalized) || typeof normalized.expression !== "string" || typeof normalized.timeZone !== "string") {
+    err(sink, file, field, "is invalid");
+    return undefined;
+  }
+  return { expression: normalized.expression, timeZone: normalized.timeZone };
+}
 
 export function validateTriggerDefinitions(input, sink, file) {
   if (input === undefined) return [];
@@ -734,6 +756,7 @@ export function validateTriggerDefinitions(input, sink, file) {
         "description",
         "kind",
         "eventTypes",
+        "schedule",
         "inputs",
         "deciderRole",
         "deciderInstructions",
@@ -744,8 +767,8 @@ export function validateTriggerDefinitions(input, sink, file) {
       file,
     );
     let ok = true;
-    if (entry.kind !== "gitrepo" && entry.kind !== "whatsapp") {
-      err(sink, file, `${field}.kind`, "must be gitrepo or whatsapp");
+    if (entry.kind !== "gitrepo" && entry.kind !== "whatsapp" && entry.kind !== "cron") {
+      err(sink, file, `${field}.kind`, "must be gitrepo, whatsapp, or cron");
       ok = false;
     }
     if (
@@ -776,7 +799,8 @@ export function validateTriggerDefinitions(input, sink, file) {
           return;
         }
         const normalized = type.trim();
-        if (!(entry.kind === "whatsapp" ? WHATSAPP_TRIGGER_EVENT_TYPES : GITREPO_TRIGGER_EVENT_TYPES).includes(normalized)) {
+        const supported = entry.kind === "whatsapp" ? WHATSAPP_TRIGGER_EVENT_TYPES : entry.kind === "cron" ? CRON_TRIGGER_EVENT_TYPES : GITREPO_TRIGGER_EVENT_TYPES;
+        if (!supported.includes(normalized)) {
           err(sink, file, `${field}.eventTypes[${j}]`, "must be a supported semantic event type for the trigger kind");
           ok = false;
           return;
@@ -800,6 +824,14 @@ export function validateTriggerDefinitions(input, sink, file) {
     );
     if (label === undefined || deciderInstructions === undefined) ok = false;
     if (!ok) return;
+    if (entry.kind === "cron" && (eventTypes.length !== 1 || eventTypes[0] !== CRON_TRIGGER_EVENT_TYPES[0])) {
+      err(sink, file, `${field}.eventTypes`, 'must be ["cron.tick"] for cron triggers');
+      return;
+    }
+    if (entry.kind !== "cron" && entry.schedule !== undefined) {
+      err(sink, file, `${field}.schedule`, "is only supported for cron triggers");
+      return;
+    }
     const key = entryId(entry.key, `${field}.key`, sink, file);
     if (key === undefined) return;
     if (seen[key]) {
@@ -822,6 +854,11 @@ export function validateTriggerDefinitions(input, sink, file) {
       file,
     );
     if (description !== undefined) definition.description = description;
+    if (entry.kind === "cron" && entry.schedule !== undefined) {
+      const schedule = validateCronScheduleField(entry.schedule, `${field}.schedule`, sink, file);
+      if (!schedule) return;
+      definition.schedule = schedule;
+    }
     if (entry.inputs !== undefined) {
       if (!Array.isArray(entry.inputs) || entry.inputs.length > 50) {
         err(
