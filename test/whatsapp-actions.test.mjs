@@ -18,7 +18,7 @@ it('rejects crossing repository and WhatsApp capabilities', async () => {
 });
 const triggered = (kind, events) => {
   const source = files('whatsapp', ['read_messages']);
-  source['bot.yaml'] += `triggers:\n  - key: incoming\n    label: Incoming messaging\n    kind: ${kind}\n    eventTypes: [${events.join(', ')}]\n    deciderInstructions: Decide whether to assist.\n`;
+  source['bot.yaml'] += `triggers:\n  - key: incoming\n    label: Incoming messaging\n    kind: ${kind}\n    eventTypes: [${events.join(', ')}]\n    deciderInstructions: Decide whether to assist.\n    deciderActions: []\n`;
   return source;
 };
 it('validates complete portable WhatsApp triggers and rejects event crossovers', async () => {

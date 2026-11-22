@@ -336,8 +336,8 @@ export async function validateFiles(input) {
   }
   const completionJudge = validateCompletionJudge(botDoc.completionJudge, modelRoles, sink, FILE_BOT_YAML);
   const workspace = validateWorkspaceMounts(botDoc.workspace, sink, FILE_BOT_YAML);
-  const triggers = validateTriggerDefinitions(botDoc.triggers, sink, FILE_BOT_YAML);
   const actions = validateActions(botDoc.actions, sink, FILE_BOT_YAML);
+  const triggers = validateTriggerDefinitions(botDoc.triggers, actions, sink, FILE_BOT_YAML);
   const connectors = validateConnectors(botDoc.connectors, sink, FILE_BOT_YAML);
 
   for (const trigger of triggers) {

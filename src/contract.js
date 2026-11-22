@@ -76,6 +76,12 @@ export const GOOGLE_ACTION_KINDS = Object.freeze(["google_docs", "google_sheets"
 export const GOOGLE_DOCS_CAPABILITIES = Object.freeze(["search_documents", "read_document", "create_document", "edit_document_content", "format_document"]);
 export const GOOGLE_SHEETS_CAPABILITIES = Object.freeze(["search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells"]);
 export const GOOGLE_CALENDAR_CAPABILITIES = Object.freeze(["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"]);
+// Explicit allowlist: new action capabilities are not automatically usable by routers.
+export const DECIDER_READ_CAPABILITIES = Object.freeze([
+  "read_issue", "search_issues", "read_change_request", "read_repository", "read_issue_artifacts",
+  "read_messages",
+  "search_documents", "read_document", "search_spreadsheets", "read_spreadsheet", "search_events", "read_event",
+]);
 
 // Author-written release note for the next publish: one trimmed line of
 // plain text (1-280 Unicode code points). `upgradePriority` ("action" for a

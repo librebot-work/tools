@@ -66,6 +66,7 @@ function previewShape(result) {
     triggerProviderEvents: Object.fromEntries(result.draft.triggers
       .map((trigger) => [trigger.key, providerEvents(trigger)])
       .filter(([, events]) => events !== undefined)),
+    ...(result.draft.triggers.length > 0 ? { deciderActionAuthority: "not_evaluated" } : {}),
     icon: result.icon ? (({ bytes, ...metadata }) => metadata)(result.icon) : undefined,
     assets: result.assets.map((a) => ({
       knowledgeId: a.knowledgeId,
@@ -149,6 +150,11 @@ async function cmdPreview(dir, json) {
     console.log("triggers:");
     for (const trigger of draft.triggers) {
       console.log(`  - ${trigger.label} [${trigger.key}; ${trigger.kind}] ${trigger.eventTypes.join(", ")}`);
+      const grants = trigger.deciderActions
+        .map(({ action, capabilities }) => `${action} (${capabilities.join(", ")})`)
+        .join("; ");
+      console.log(`      Router native actions (valid source declarations): ${grants || "none"}`);
+      console.log("      Instance authority not evaluated; installed bindings and permissions still apply.");
       const required = providerEvents(trigger);
       if (required) {
         console.log(`      GitHub App events: ${required.github.join(", ")}`);

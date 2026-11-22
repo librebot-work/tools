@@ -82,11 +82,11 @@ describe("custom model roles", () => {
 
   it("accepts a declared custom deciderRole and rejects undeclared ones", async () => {
     const ok = await base(
-      "  - role: frontend_dev_model\n    label: Frontend dev\ntriggers:\n  - key: t\n    label: T\n    kind: gitrepo\n    eventTypes: [issue.opened]\n    deciderRole: frontend_dev_model\n    deciderInstructions: Decide.\n",
+      "  - role: frontend_dev_model\n    label: Frontend dev\ntriggers:\n  - key: t\n    label: T\n    kind: gitrepo\n    eventTypes: [issue.opened]\n    deciderRole: frontend_dev_model\n    deciderInstructions: Decide.\n    deciderActions: []\n",
     );
     assert.equal(ok.ok, true);
     const bad = await base(
-      "triggers:\n  - key: t\n    label: T\n    kind: gitrepo\n    eventTypes: [issue.opened]\n    deciderRole: ghost_role\n    deciderInstructions: Decide.\n",
+      "triggers:\n  - key: t\n    label: T\n    kind: gitrepo\n    eventTypes: [issue.opened]\n    deciderRole: ghost_role\n    deciderInstructions: Decide.\n    deciderActions: []\n",
     );
     assert.equal(bad.ok, false);
   });

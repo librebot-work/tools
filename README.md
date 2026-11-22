@@ -192,7 +192,17 @@ triggers:
     kind: gitrepo
     eventTypes: [issue.opened]
     deciderInstructions: Decide whether this issue needs assistance.
+    deciderActions:
+      - action: issues
+        capabilities: [read_issue]
 ```
+
+Every trigger must explicitly declare `deciderActions`. Use `[]` when the
+router needs no native actions. Each entry names one top-level action key and
+lists only read-only capabilities declared on that action. This is not a
+grant of instance authority and does not remove those capabilities from normal
+tasks. `librebot preview` checks the source declarations, not installed
+bindings or permissions (`deciderActionAuthority: "not_evaluated"` in JSON).
 
 Action capabilities are `read_issue`, `push_branch`, `propose_change`,
 `comment_issue`, `search_issues`, `read_change_request`, `read_repository`,
@@ -385,9 +395,10 @@ recreate that configuration when a release is ready.
   grant for cell colors independent of value and formula writes; 0.4.13 adds
   the optional `upgradeSummary` release note with `upgradePriority`
   (`action` | `notable`, requires a summary) and the shared
-  `validateUpgradeNote` contract helper.
+  `validateUpgradeNote` contract helper; 0.4.18 requires explicit read-only
+  `deciderActions` per trigger and exports `DECIDER_READ_CAPABILITIES`.
 - Clock triggers use `kind: cron`, `eventTypes: [cron.tick]`, and the usual
-  `key`, `label`, and `deciderInstructions`. An optional
+  `key`, `label`, `deciderInstructions`, and `deciderActions`. An optional
   `schedule: { expression: "0 9 * * 1-5", timeZone: America/New_York }`
   suggests 09:00 on local weekdays. The installed binding must be enabled
   with an explicit schedule to receive ticks. Five-field cron supports minute

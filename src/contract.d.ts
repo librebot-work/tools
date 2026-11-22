@@ -31,6 +31,12 @@ export const GOOGLE_ACTION_KINDS: readonly ["google_docs", "google_sheets", "goo
 export const GOOGLE_DOCS_CAPABILITIES: readonly ["search_documents", "read_document", "create_document", "edit_document_content", "format_document"];
 export const GOOGLE_SHEETS_CAPABILITIES: readonly ["search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells"];
 export const GOOGLE_CALENDAR_CAPABILITIES: readonly ["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"];
+export const DECIDER_READ_CAPABILITIES: readonly [
+  "read_issue", "search_issues", "read_change_request", "read_repository", "read_issue_artifacts",
+  "read_messages",
+  "search_documents", "read_document", "search_spreadsheets", "read_spreadsheet", "search_events", "read_event",
+];
+export type DeciderReadCapability = typeof DECIDER_READ_CAPABILITIES[number];
 
 export type BuiltInModelRoleId = typeof MODEL_ROLES[number];
 export type ModelRoleId = string;

@@ -1,5 +1,5 @@
 // Type definitions for librebot-tools (hand-written; no build step).
-import type { ModelRoleId, RepoCapability, WhatsAppCapability, GoogleDocsCapability, GoogleSheetsCapability, GoogleCalendarCapability } from "./contract.js";
+import type { DeciderReadCapability, ModelRoleId, RepoCapability, WhatsAppCapability, GoogleDocsCapability, GoogleSheetsCapability, GoogleCalendarCapability } from "./contract.js";
 export * from "./contract.js";
 
 export interface SourceIssue {
@@ -71,7 +71,7 @@ export interface BotDraft extends BotUpgradeText {
   knowledge: BotKnowledge[];
   skills: BotSkill[];
   connectors: BotConnector[];
-  triggers: Array<{ key: string; label: string; kind: "gitrepo" | "whatsapp" | "cron"; eventTypes: string[]; description?: string; schedule?: { expression: string; timeZone: string }; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: ModelRoleId; deciderInstructions: string; enabledByDefault?: boolean }>;
+  triggers: Array<{ key: string; label: string; kind: "gitrepo" | "whatsapp" | "cron"; eventTypes: string[]; description?: string; schedule?: { expression: string; timeZone: string }; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: ModelRoleId; deciderInstructions: string; deciderActions: Array<{ action: string; capabilities: DeciderReadCapability[] }>; enabledByDefault?: boolean }>;
   workspace: Array<{ key: string; label?: string; path: string }>;
   actions: Array<{ key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] } | { key: string; kind: "whatsapp"; label?: string; capabilities: WhatsAppCapability[] } | { key: string; kind: "google_docs"; label?: string; capabilities: GoogleDocsCapability[] } | { key: string; kind: "google_sheets"; label?: string; capabilities: GoogleSheetsCapability[] } | { key: string; kind: "google_calendar"; label?: string; capabilities: GoogleCalendarCapability[] }>;
   icon?: string;

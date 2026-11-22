@@ -49,6 +49,7 @@ export { canonicalJson, sha256Hex, toBytes } from "./util.js";
 export {
   BUILT_IN_MODEL_ROLES,
   CUSTOM_MODEL_ROLE_ID_RE,
+  DECIDER_READ_CAPABILITIES,
   FORMAT_VERSION,
   MAX_MODEL_ROLES,
   MAX_UPGRADE_SUMMARY_CODEPOINTS,

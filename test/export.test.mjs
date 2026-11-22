@@ -37,7 +37,7 @@ describe("export fidelity", () => {
       botPrompt: "Hi.",
       readme: "# T",
       workspace: [{ key: "source", label: "Source", path: "./code" }],
-      triggers: [{ key: "issues", label: "Issues", kind: "gitrepo", eventTypes: ["issue.opened"], deciderInstructions: "Decide" }],
+      triggers: [{ key: "issues", label: "Issues", kind: "gitrepo", eventTypes: ["issue.opened"], deciderInstructions: "Decide", deciderActions: [] }],
       connectors: [{ id: "platform-connector", label: "Connector", tools: ["search"], resources: [{ key: "scope", label: "Scope", tools: ["search"] }] }],
       knowledge: [{ id: "docs", name: "Docs", kind: "resource", url: "https://example.com/docs" }],
     });
@@ -50,6 +50,7 @@ describe("export fidelity", () => {
     assert.equal(parsed.draft.workspace[0].key, "source");
     assert.equal(parsed.draft.triggers[0].key, "issues");
     assert.equal(parsed.draft.triggers[0].label, "Issues");
+    assert.deepEqual(parsed.draft.triggers[0].deciderActions, []);
     assert.equal("visibility" in parsed.draft, false);
     const again = await parseBotFiles(exportBotFiles(parsed.draft));
     assert.deepEqual(again.draft, parsed.draft);

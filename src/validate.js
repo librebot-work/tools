@@ -13,6 +13,7 @@ import {
   CRON_TRIGGER_EVENT_TYPES,
   GOOGLE_ACTION_KINDS, GOOGLE_DOCS_CAPABILITIES, GOOGLE_SHEETS_CAPABILITIES,
   GOOGLE_CALENDAR_CAPABILITIES,
+  DECIDER_READ_CAPABILITIES,
   isModelRoleId, validateCronSchedule,
 } from "./contract.js";
 const ACTION_CAPABILITIES = {
@@ -730,7 +731,50 @@ function validateCronScheduleField(value, field, sink, file) {
   return { expression: normalized.expression, timeZone: normalized.timeZone };
 }
 
-export function validateTriggerDefinitions(input, sink, file) {
+function validateDeciderActions(input, actions, field, sink, file) {
+  if (!Array.isArray(input) || input.length > 20) {
+    err(sink, file, field, "must be an explicit array of at most 20 action grants (use [] for no native actions)");
+    return [];
+  }
+  const seen = new Set();
+  const grants = [];
+  input.forEach((entry, i) => {
+    const path = `${field}[${i}]`;
+    if (!isRecord(entry)) {
+      err(sink, file, path, "must be an object");
+      return;
+    }
+    checkKeys(entry, ["action", "capabilities"], path, sink, file);
+    const action = entryId(entry.action, `${path}.action`, sink, file);
+    if (action === undefined) return;
+    if (seen.has(action)) err(sink, file, `${path}.action`, "contains duplicate action");
+    seen.add(action);
+    const group = actions.find((group) => group.key === action);
+    if (!group) err(sink, file, `${path}.action`, "must name a declared action");
+    if (!Array.isArray(entry.capabilities) || entry.capabilities.length === 0 ||
+        entry.capabilities.length > DECIDER_READ_CAPABILITIES.length) {
+      err(sink, file, `${path}.capabilities`, "must be a non-empty array of read-only capabilities");
+      return;
+    }
+    const capabilities = new Set();
+    entry.capabilities.forEach((capability, j) => {
+      const capPath = `${path}.capabilities[${j}]`;
+      if (!DECIDER_READ_CAPABILITIES.includes(capability)) {
+        err(sink, file, capPath, "must be a supported read-only capability");
+      } else if (group && !group.capabilities.includes(capability)) {
+        err(sink, file, capPath, "must be declared on the referenced action");
+      } else if (capabilities.has(capability)) {
+        err(sink, file, capPath, "contains duplicate capability");
+      } else {
+        capabilities.add(capability);
+      }
+    });
+    grants.push({ action, capabilities: [...capabilities] });
+  });
+  return grants;
+}
+
+export function validateTriggerDefinitions(input, actions, sink, file) {
   if (input === undefined) return [];
   if (!Array.isArray(input)) {
     err(sink, file, "triggers", "must be an array");
@@ -760,6 +804,7 @@ export function validateTriggerDefinitions(input, sink, file) {
         "inputs",
         "deciderRole",
         "deciderInstructions",
+        "deciderActions",
         "enabledByDefault",
       ],
       field,
@@ -845,6 +890,7 @@ export function validateTriggerDefinitions(input, sink, file) {
       kind: entry.kind,
       eventTypes,
       deciderInstructions,
+      deciderActions: validateDeciderActions(entry.deciderActions, actions, `${field}.deciderActions`, sink, file),
     };
     const description = optionalText(
       entry.description,

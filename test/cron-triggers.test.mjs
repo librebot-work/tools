@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { parseBotFiles, scaffoldBotFiles, exportBotFiles } from "../src/index.js";
 import { CRON_TRIGGER_EVENT_TYPES } from "../src/contract.js";
 
-const trigger = (overrides = {}) => ({ key: "morning-triage", label: "Morning triage", kind: "cron", eventTypes: ["cron.tick"], deciderInstructions: "Decide whether to act", ...overrides });
+const trigger = (overrides = {}) => ({ key: "morning-triage", label: "Morning triage", kind: "cron", eventTypes: ["cron.tick"], deciderInstructions: "Decide whether to act", deciderActions: [], ...overrides });
 const source = (triggers) => ({ ...scaffoldBotFiles({ name: "Triggers" }), "bot.yaml": `formatVersion: 1\nname: Triggers\ndescription: D\nmodelRoles: [{role: default, label: Main}]\ntriggers: ${JSON.stringify(triggers)}\n` });
 
 describe("Cron trigger authoring", () => {

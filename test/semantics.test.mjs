@@ -31,10 +31,38 @@ describe("semantic cross-references", () => {
 
   it("rejects triggers whose deciderRole is not declared", async () => {
     const result = await base(
-      "triggers:\n  - key: triage\n    label: T\n    kind: gitrepo\n    eventTypes: [issue.opened]\n    deciderRole: slow\n    deciderInstructions: decide\n",
+      "triggers:\n  - key: triage\n    label: T\n    kind: gitrepo\n    eventTypes: [issue.opened]\n    deciderRole: slow\n    deciderInstructions: decide\n    deciderActions: []\n",
     );
     assert.equal(result.ok, false);
     assert.ok(messages(result).some((m) => m.includes("declared model roles")));
+  });
+
+  it("requires explicit router action declarations and rejects invalid grants", async () => {
+    const declared = "actions: [{key: chat, kind: whatsapp, capabilities: [read_messages, send_text]}]\n";
+    const trigger = { key: "triage", label: "T", kind: "gitrepo", eventTypes: ["issue.opened"], deciderInstructions: "Decide." };
+    const validate = (deciderActions) => base(`${declared}triggers: ${JSON.stringify([{ ...trigger, deciderActions }])}\n`);
+    const grant = { action: "chat", capabilities: ["read_messages"] };
+    for (const valid of [[], [grant]]) {
+      const result = await validate(valid);
+      assert.equal(result.ok, true);
+      assert.deepEqual(result.draft.triggers[0].deciderActions, valid);
+      assert.deepEqual(result.draft.actions[0].capabilities, ["read_messages", "send_text"]);
+    }
+    for (const [invalid, field] of [
+      [undefined, "deciderActions"],
+      [null, "deciderActions"],
+      [[{ ...grant, target: "elsewhere" }], "deciderActions[0]"],
+      [[{ ...grant, action: "unknown" }], "deciderActions[0].action"],
+      [[{ ...grant, capabilities: [] }], "deciderActions[0].capabilities"],
+      [[{ ...grant, capabilities: ["send_text"] }], "deciderActions[0].capabilities[0]"],
+      [[{ ...grant, capabilities: ["read_issue"] }], "deciderActions[0].capabilities[0]"],
+      [[{ ...grant, capabilities: ["read_messages", "read_messages"] }], "deciderActions[0].capabilities[1]"],
+      [[grant, grant], "deciderActions[1].action"],
+    ]) {
+      const result = await validate(invalid);
+      assert.equal(result.ok, false);
+      assert.ok(result.errors.some((error) => error.field === `triggers[0].${field}`), JSON.stringify(result.errors));
+    }
   });
 
   it("accepts API-only actions without a workspace mount", async () => {
@@ -69,7 +97,7 @@ describe("semantic cross-references", () => {
   });
 
   it("parses and validates a bot authored with merge_change_request and change_request.checks_updated", async () => {
-    const result = await base("workspace: [{key: source, path: ./code}]\nactions: [{key: repo, kind: gitrepo, capabilities: [read_change_request, merge_change_request]}]\ntriggers: [{key: checks, label: Checks, kind: gitrepo, eventTypes: [change_request.checks_updated], deciderInstructions: Decide.}]\n");
+    const result = await base("workspace: [{key: source, path: ./code}]\nactions: [{key: repo, kind: gitrepo, capabilities: [read_change_request, merge_change_request]}]\ntriggers: [{key: checks, label: Checks, kind: gitrepo, eventTypes: [change_request.checks_updated], deciderInstructions: Decide., deciderActions: []}]\n");
     assert.equal(result.ok, true);
     assert.deepEqual(result.draft.actions[0].capabilities, ["read_change_request", "merge_change_request"]);
     assert.deepEqual(result.draft.triggers[0].eventTypes, ["change_request.checks_updated"]);
@@ -111,7 +139,7 @@ describe("semantic cross-references", () => {
     for (const yaml of [
       "visibility: private\n",
       "workspace:\n  - {id: legacy, key: source, path: ./code}\n",
-      "triggers:\n  - {id: legacy, key: triage, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\n",
+      "triggers:\n  - {id: legacy, key: triage, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide, deciderActions: []}\n",
       "connectors:\n  - {id: legacy, label: C, tools: [search]}\n",
     ]) {
       const result = await base(yaml);
@@ -121,7 +149,7 @@ describe("semantic cross-references", () => {
   });
 
   it("preserves explicit keys across labels and paths and rejects duplicate keys", async () => {
-    const yaml = "workspace:\n  - {key: source, label: Source, path: ./code}\ntriggers:\n  - {key: triage, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\nconnectors:\n  - {label: C, tools: [search]}\n";
+    const yaml = "workspace:\n  - {key: source, label: Source, path: ./code}\ntriggers:\n  - {key: triage, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide, deciderActions: []}\nconnectors:\n  - {label: C, tools: [search]}\n";
     const first = await base(yaml);
     const second = await base(yaml.replace("label: Source", "label: Renamed").replace("./code", "./renamed").replace("label: T,", "label: Renamed,"));
     assert.equal(first.ok, true);
@@ -129,9 +157,9 @@ describe("semantic cross-references", () => {
     assert.equal(second.draft.workspace[0].key, first.draft.workspace[0].key);
     assert.equal(second.draft.triggers[0].key, first.draft.triggers[0].key);
     assert.deepEqual(first.draft.connectors, second.draft.connectors);
-    const duplicate = await base("triggers:\n  - {key: same, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\n  - {key: same, label: Other, kind: gitrepo, eventTypes: [issue.closed], deciderInstructions: decide}\n");
+    const duplicate = await base("triggers:\n  - {key: same, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide, deciderActions: []}\n  - {key: same, label: Other, kind: gitrepo, eventTypes: [issue.closed], deciderInstructions: decide, deciderActions: []}\n");
     assert.equal(duplicate.ok, false);
-    const sameLabel = await base("triggers:\n  - {key: first, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide}\n  - {key: second, label: T, kind: gitrepo, eventTypes: [issue.closed], deciderInstructions: decide}\n");
+    const sameLabel = await base("triggers:\n  - {key: first, label: T, kind: gitrepo, eventTypes: [issue.opened], deciderInstructions: decide, deciderActions: []}\n  - {key: second, label: T, kind: gitrepo, eventTypes: [issue.closed], deciderInstructions: decide, deciderActions: []}\n");
     assert.equal(sameLabel.ok, true);
     const duplicateConnectors = await base("connectors:\n  - {label: C, tools: [search]}\n  - {label: ' C ', tools: [other]}\n");
     assert.equal(duplicateConnectors.ok, false);
