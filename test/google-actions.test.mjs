@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { validateFiles } from '../src/index.js';
 import { GOOGLE_DOCS_CAPABILITIES, GOOGLE_SHEETS_CAPABILITIES, GOOGLE_CALENDAR_CAPABILITIES } from '../src/index.js';
 const files = (kind, capabilities) => ({
-  'bot.yaml': `formatVersion: 1\nname: Researcher\ndescription: Uses owner-bound Google authority\nmodelRoles:\n  - {role: default, label: Main}\nactions:\n  - {key: work, kind: ${kind}, capabilities: [${capabilities.join(', ')}]}\n`,
+  'bot.yaml': `formatVersion: 1\ndescription: Uses owner-bound Google authority\nmodelRoles:\n  - {role: default, label: Main}\nactions:\n  - {key: work, kind: ${kind}, capabilities: [${capabilities.join(', ')}]}\n`,
   'instructions.md': 'Use only owner-bound Google authority.',
   'README.md': '# Researcher',
 });

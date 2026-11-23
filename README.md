@@ -7,7 +7,7 @@ build step, hand-written types in `src/index.d.ts`.
 ## Source format (v1)
 
 ```text
-bot.yaml                 # identity, description, format version, model roles,
+bot.yaml                 # description, format version, model roles,
                          # workspace mounts, triggers, actions, connectors
 instructions.md          # main prompt (-> BotDraft.botPrompt)
 README.md                # required user documentation (-> BotDraft.readme)
@@ -33,6 +33,8 @@ Rules:
 
 - `bot.yaml` keys are strict: unknown fields are errors. `tools` was
   removed — builtin tools are always on, never declared.
+- The bot display name and URL handle are managed on the platform bot page.
+  Rename the bot there; a top-level `name` in `bot.yaml` is rejected.
 - Required root `README.md` becomes `draft.readme`: strict UTF-8, trimmed,
   non-empty, and at most 100000 characters after trimming.
   It is presentation-only user documentation, never `botPrompt` or knowledge,
@@ -289,6 +291,9 @@ librebot scaffold <dir> --name <name> [--description ...] [--force]
 librebot resolve-skills <dir> [--update] [--vendor] [--network]
 ```
 
+`scaffold --name` sets the headings in `README.md` and `instructions.md`, not
+the platform bot name.
+
 External skill resolution requires `npx` on PATH. It selects its pinned Skills CLI
 independently of the parent npm invocation, including when Librebot itself runs
 through `npx --package=... librebot`.
@@ -433,3 +438,5 @@ SKILL.md <= 50,000 bytes
 and non-empty; text knowledge <= 100,000 chars inline (empty files inline
 as empty content, matching platform acceptance); knowledge assets
 <= 10 MiB; skill supporting files <= 1 MiB each.
+
+The bot name and URL handle are subject to platform rules, not source validation.

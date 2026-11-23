@@ -16,7 +16,7 @@ import {
 const base = (yaml) =>
   validateFiles({
     "bot.yaml":
-      "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
+      "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
       yaml,
     "instructions.md": "Be helpful.",
     "README.md": "# T",
@@ -44,7 +44,7 @@ describe("custom model roles", () => {
     assert.match("frontend_dev_model", CUSTOM_MODEL_ROLE_ID_RE);
     const missing = await validateFiles({
       "bot.yaml":
-        "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: frontend_dev_model\n    label: Frontend dev\n",
+        "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: frontend_dev_model\n    label: Frontend dev\n",
       "instructions.md": "Be helpful.",
       "README.md": "# T",
     });

@@ -60,7 +60,6 @@ export interface BotUpgradeText {
 }
 
 export interface BotDraft extends BotUpgradeText {
-  name: string;
   description: string;
   botPrompt: string;
   /** User-facing documentation from root README.md, separate from the prompt and knowledge. */

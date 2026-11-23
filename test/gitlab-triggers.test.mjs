@@ -9,7 +9,7 @@ import { parseBotFiles, scaffoldBotFiles, exportBotFiles } from "../src/index.js
 import { GITREPO_TRIGGER_EVENT_TYPES } from "../src/contract.js";
 
 const trigger = (overrides = {}) => ({ key: "project-events", label: "Project events", kind: "gitrepo", eventTypes: ["change_request.opened"], deciderInstructions: "Decide whether to act", deciderActions: [], ...overrides });
-const source = (triggers) => ({ ...scaffoldBotFiles({ name: "Triggers" }), "bot.yaml": `formatVersion: 1\nname: Triggers\ndescription: D\nmodelRoles: [{role: default, label: Main}]\nactions: [{key: repo, kind: gitrepo, capabilities: [read_change_request, merge_change_request]}]\ntriggers: ${JSON.stringify(triggers)}\n` });
+const source = (triggers) => ({ ...scaffoldBotFiles({ name: "Triggers" }), "bot.yaml": `formatVersion: 1\ndescription: D\nmodelRoles: [{role: default, label: Main}]\nactions: [{key: repo, kind: gitrepo, capabilities: [read_change_request, merge_change_request]}]\ntriggers: ${JSON.stringify(triggers)}\n` });
 
 describe("Portable repository trigger authoring", () => {
   it("round-trips every semantic event and preserves explicit keys across label edits", async () => {

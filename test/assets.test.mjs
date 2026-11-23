@@ -13,7 +13,7 @@ import {
 
 const base = (extra = {}) => ({
   "bot.yaml":
-    "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
+    "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
   "instructions.md": "Be helpful.",
   "README.md": "# T",
   ...extra,

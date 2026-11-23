@@ -50,8 +50,8 @@ Nothing outside its task conversation.
 `;
 }
 
-function skeletonKnowledgeReadme(name) {
-  return `# Knowledge\n\nFiles in this directory are the bot's knowledge assets. Any file format\nis accepted in source; large or binary files travel as content-addressed\nassets alongside the parsed definition.\n\n- \`product-guide.md\` — sample knowledge document for ${name}.\n`;
+function skeletonKnowledgeReadme() {
+  return `# Knowledge\n\nFiles in this directory are the bot's knowledge assets. Any file format\nis accepted in source; large or binary files travel as content-addressed\nassets alongside the parsed definition.\n\n- \`product-guide.md\` — sample knowledge document.\n`;
 }
 
 function skeletonSkill() {
@@ -68,10 +68,9 @@ export function scaffoldBotFiles(input) {
   if (!name || name.length > 100) {
     throw new Error("scaffold requires a name of 1-100 chars");
   }
-  const description = String(input?.description ?? "").trim() || `Bot named ${name}.`;
+  const description = String(input?.description ?? "").trim() || "Describe what this bot does.";
   const botYaml = {
     formatVersion: 1,
-    name,
     description,
     icon: "./assets/icon.svg",
     modelRoles: [{ role: "default", label: "Main" }],
@@ -85,8 +84,8 @@ export function scaffoldBotFiles(input) {
     "README.md": skeletonReadme(name, description),
     "assets/icon.svg": DEFAULT_ICON,
     "instructions.md": skeletonInstructions(name),
-    "knowledge/README.md": skeletonKnowledgeReadme(name),
-    "knowledge/product-guide.md": `# Product guide\n\nReplace this sample with real knowledge for ${name}.\n`,
+    "knowledge/README.md": skeletonKnowledgeReadme(),
+    "knowledge/product-guide.md": "# Product guide\n\nReplace this sample with real knowledge for the bot.\n",
     "skills/demo/SKILL.md": skeletonSkill(),
   };
 }
@@ -113,7 +112,6 @@ export function exportBotFiles(
     throw new Error("export requires a draft object");
   }
   const {
-    name,
     description,
     botPrompt,
     modelRoles,
@@ -122,8 +120,8 @@ export function exportBotFiles(
     actions,
     connectors,
   } = draft;
-  if (typeof name !== "string" || typeof botPrompt !== "string") {
-    throw new Error("export requires at least draft name and botPrompt");
+  if (typeof botPrompt !== "string") {
+    throw new Error("export requires a draft botPrompt");
   }
   if (typeof draft.readme !== "string" || !draft.readme.trim()) {
     throw new Error("export requires a non-empty draft readme");
@@ -180,7 +178,6 @@ export function exportBotFiles(
   }
   files["bot.yaml"] = stringifyYaml({
     formatVersion: 1,
-    name,
     description: description ?? "",
     ...(typeof draft.upgradeSummary === "string" ? { upgradeSummary: draft.upgradeSummary.trim() } : {}),
     ...(draft.upgradePriority === "action" || draft.upgradePriority === "notable" ? { upgradePriority: draft.upgradePriority } : {}),

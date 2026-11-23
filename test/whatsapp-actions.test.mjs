@@ -2,7 +2,7 @@ import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateFiles } from '../src/index.js';
 const files = (kind, capabilities) => ({
-  'bot.yaml': `formatVersion: 1\nname: Messenger\ndescription: Replies with permission\nmodelRoles:\n  - {role: default, label: Main}\nactions:\n  - {key: messaging, kind: ${kind}, capabilities: [${capabilities.join(', ')}]}\n`,
+  'bot.yaml': `formatVersion: 1\ndescription: Replies with permission\nmodelRoles:\n  - {role: default, label: Main}\nactions:\n  - {key: messaging, kind: ${kind}, capabilities: [${capabilities.join(', ')}]}\n`,
   'instructions.md': 'Use only owner-bound messaging authority.',
   'README.md': '# Messenger',
 });

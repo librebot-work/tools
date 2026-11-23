@@ -8,7 +8,7 @@ import { BotSourceError, parseBotFiles, validateFiles } from "../src/index.js";
 const base = (yaml = "") =>
   ({
     "bot.yaml":
-      "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
+      "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
       yaml,
     "instructions.md": "Be helpful.",
     "README.md": "# T",
@@ -43,10 +43,22 @@ describe("malformed source", () => {
     assert.match(tools.message, /removed/);
   });
 
+  it("rejects a top-level bot name with platform rename guidance", async () => {
+    await assert.rejects(parseBotFiles(base("name: T\n")), (error) => {
+      assert.ok(error instanceof BotSourceError);
+      assert.deepEqual(error.errors, [{
+        file: "bot.yaml",
+        field: "name",
+        message: "was removed: the bot name is managed by the platform; rename the bot from its page",
+      }]);
+      return true;
+    });
+  });
+
   it("rejects wrong format versions", async () => {
     const result = await validateFiles({
       ...base(),
-      "bot.yaml": "formatVersion: 2\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
+      "bot.yaml": "formatVersion: 2\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
     });
     assert.equal(result.ok, false);
     assert.ok(fieldsOf(result).includes("bot.yaml:formatVersion"));
@@ -72,7 +84,7 @@ describe("malformed source", () => {
     const result = await validateFiles(base());
     assert.equal(result.ok, true);
     assert.deepEqual(result.errors, []);
-    assert.equal(result.draft.name, "T");
+    assert.equal(result.draft.description, "D");
     assert.equal(result.draft.botPrompt, "Be helpful.");
     assert.ok(!("tools" in result.draft));
   });

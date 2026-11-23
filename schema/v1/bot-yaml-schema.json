@@ -5,11 +5,10 @@
   "description": "Consolidated bot definition. instructions.md carries the main prompt; knowledge/ and skills/ are file trees; knowledgeSources holds structured external references. Builtin tools are always on and must not be declared; local-execution MCP servers are unsupported.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["formatVersion", "name", "description", "modelRoles"],
+  "required": ["formatVersion", "description", "modelRoles"],
   "dependentRequired": { "upgradePriority": ["upgradeSummary"] },
   "properties": {
     "formatVersion": { "const": 1 },
-    "name": { "type": "string", "minLength": 1, "maxLength": 100 },
     "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
     "upgradeSummary": {
       "type": "string",

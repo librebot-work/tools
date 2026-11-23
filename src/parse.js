@@ -36,7 +36,6 @@ const KNOWLEDGE_INDEX = "knowledge/README.md";
 
 const TOP_LEVEL_KEYS = [
   "formatVersion",
-  "name",
   "description",
   "upgradeSummary",
   "upgradePriority",
@@ -253,7 +252,9 @@ export async function validateFiles(input) {
         message:
           key === "tools"
             ? "was removed: builtin tools are always on and must not be declared"
-            : `contains unsupported field ${key}`,
+            : key === "name"
+              ? "was removed: the bot name is managed by the platform; rename the bot from its page"
+              : `contains unsupported field ${key}`,
       });
     }
   }
@@ -265,7 +266,6 @@ export async function validateFiles(input) {
     });
   }
 
-  const name = requiredString(botDoc.name, "name", 100, sink, FILE_BOT_YAML);
   const description = requiredString(
     botDoc.description,
     "description",
@@ -610,11 +610,10 @@ export async function validateFiles(input) {
     errors.push({ file: DIR_SKILLS, field: "", message: "has too many entries (max 100)" });
   }
 
-  if (errors.length > 0 || name === undefined || description === undefined || botPrompt === undefined) {
+  if (errors.length > 0 || description === undefined || botPrompt === undefined) {
     return { ok: false, errors, warnings };
   }
   const draft = {
-    name,
     description,
     ...(upgradeSummary !== undefined ? { upgradeSummary } : {}),
     ...(upgradePriority !== undefined ? { upgradePriority } : {}),

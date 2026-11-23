@@ -7,7 +7,6 @@ function files(judge, roles = ["default"]) {
   return {
     "bot.yaml": stringify({
       formatVersion: 1,
-      name: "Completion",
       description: "Completion contract",
       modelRoles: roles.map((role) => ({ role, label: role })),
       ...(judge !== undefined ? { completionJudge: judge } : {}),

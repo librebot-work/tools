@@ -12,15 +12,22 @@ import {
 
 describe("export fidelity", () => {
   it("scaffolds a valid source that round-trips its draft", async () => {
-    const initial = await parseBotFiles(scaffoldBotFiles({ name: "Smoke" }));
-    const roundtrip = await parseBotFiles(exportBotFiles(initial.draft, { icon: initial.icon }));
+    const scaffolded = scaffoldBotFiles({ name: "Smoke" });
+    assert.doesNotMatch(scaffolded["bot.yaml"], /^name:/m);
+    assert.match(scaffolded["README.md"], /^# Smoke\n/);
+    assert.match(scaffolded["instructions.md"], /^# Smoke\n/);
+    const initial = await parseBotFiles(scaffolded);
+    assert.equal("name" in initial.draft, false);
+    const exported = exportBotFiles(initial.draft, { icon: initial.icon });
+    assert.doesNotMatch(exported["bot.yaml"], /^name:/m);
+    const roundtrip = await parseBotFiles(exported);
     assert.deepEqual(roundtrip.draft, initial.draft);
   });
 
   it("round-trips portable action groups independently of checkout declarations", async () => {
     const initial = await parseBotFiles({
       ...scaffoldBotFiles({ name: "GitLab" }),
-      "bot.yaml": "formatVersion: 1\nname: GitLab\ndescription: D\nmodelRoles:\n  - {role: default, label: Main}\nworkspace:\n  - {key: source, path: ./code}\nactions:\n  - {key: repo, kind: gitrepo, capabilities: [propose_change, read_change_request, update_issue_title]}\n",
+      "bot.yaml": "formatVersion: 1\ndescription: D\nmodelRoles:\n  - {role: default, label: Main}\nworkspace:\n  - {key: source, path: ./code}\nactions:\n  - {key: repo, kind: gitrepo, capabilities: [propose_change, read_change_request, update_issue_title]}\n",
     });
     const exported = exportBotFiles(initial.draft);
     const roundtrip = await parseBotFiles(exported);
@@ -31,7 +38,6 @@ describe("export fidelity", () => {
 
   it("omits platform metadata while retaining semantic identifiers", async () => {
     const files = exportBotFiles({
-      name: "T",
       description: "D",
       visibility: "public",
       botPrompt: "Hi.",
@@ -67,7 +73,6 @@ describe("export fidelity", () => {
 
   it("round-trips resource/repo knowledge through knowledgeSources", async () => {
     const draft = {
-      name: "T",
       description: "D",
       visibility: "private",
       botPrompt: "Hi.",
@@ -99,7 +104,6 @@ describe("export fidelity", () => {
     assert.throws(
       () =>
         exportBotFiles({
-          name: "T",
           botPrompt: "Hi.",
           readme: "# T",
           knowledge: [{ id: "x", name: "X", kind: "file" }],
@@ -110,7 +114,6 @@ describe("export fidelity", () => {
 
   it("sanitizes hostile legacy names into stable id-based filenames", async () => {
     const exported = exportBotFiles({
-      name: "T",
       description: "D",
       botPrompt: "Hi.",
       readme: "# T",
@@ -135,7 +138,6 @@ describe("export fidelity", () => {
     });
     assert.match(injected, /^---\nname: "Legacy"\ndescription: "Old skill."\n---\n/);
     const exported = exportBotFiles({
-      name: "T",
       description: "D",
       botPrompt: "Hi.",
       readme: "# T",

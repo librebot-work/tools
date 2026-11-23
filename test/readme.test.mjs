@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { parseBotFiles, validateFiles, exportBotFiles, scaffoldBotFiles, scaffoldBot, validateSource } from "../src/index.js";
 
 const files = (extra = {}) => ({
-  "bot.yaml": "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
+  "bot.yaml": "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
   "instructions.md": "Be helpful.",
   "README.md": "# T",
   ...extra,

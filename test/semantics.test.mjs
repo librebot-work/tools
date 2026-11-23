@@ -8,7 +8,7 @@ import { validateFiles } from "../src/index.js";
 const base = (yaml) =>
   validateFiles({
     "bot.yaml":
-      "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
+      "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
       yaml,
     "instructions.md": "Be helpful.",
     "README.md": "# T",
@@ -19,7 +19,7 @@ const messages = (result) => result.errors.map((e) => e.message);
 describe("semantic cross-references", () => {
   it("applies the draft quota to UTF-8 bytes rather than characters", async () => {
     const files = {
-      "bot.yaml": "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
+      "bot.yaml": "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
       "instructions.md": "Be helpful.",
       "README.md": "# T",
     };
@@ -188,7 +188,7 @@ describe("semantic cross-references", () => {
   it("accepts a remote MCP endpoint and preserves model requirements", async () => {
     const result = await validateFiles({
       "bot.yaml":
-        "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n    requirements: { vision: true, minContextWindow: 128000 }\nconnectors:\n  - label: GitHub\n    tools: [search]\n    endpoint: https://mcp.example.com/rpc\n",
+        "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n    requirements: { vision: true, minContextWindow: 128000 }\nconnectors:\n  - label: GitHub\n    tools: [search]\n    endpoint: https://mcp.example.com/rpc\n",
       "instructions.md": "Be helpful.",
       "README.md": "# T",
     });
@@ -209,7 +209,7 @@ describe("semantic cross-references", () => {
 
     const collision = await validateFiles({
       "bot.yaml":
-        "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\nknowledgeSources:\n  - id: guide__intro.md\n    name: Guide\n    kind: resource\n    url: https://example.com/g\n",
+        "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\nknowledgeSources:\n  - id: guide__intro.md\n    name: Guide\n    kind: resource\n    url: https://example.com/g\n",
       "instructions.md": "Be helpful.",
       "README.md": "# T",
       "knowledge/guide/intro.md": "hello",
@@ -221,7 +221,7 @@ describe("semantic cross-references", () => {
   it("rejects empty SKILL.md like platform content validation", async () => {
     const result = await validateFiles({
       "bot.yaml":
-        "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
+        "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n",
       "instructions.md": "Be helpful.",
       "README.md": "# T",
       "skills/empty/SKILL.md": "   \n",

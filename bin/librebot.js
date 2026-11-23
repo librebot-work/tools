@@ -103,7 +103,7 @@ async function cmdValidate(dir, json) {
     console.log(JSON.stringify({ ok: true, warnings: result.warnings }, null, 2));
   } else {
     console.log(
-      `valid: ${result.draft.name} (${result.draft.knowledge.length} knowledge, ` +
+      `valid: bot source (${result.draft.knowledge.length} knowledge, ` +
         `${result.draft.skills.length} skills, ${result.assets.length} assets, ` +
         `${result.skillFiles.length} skill files)`,
     );
@@ -121,7 +121,6 @@ async function cmdPreview(dir, json) {
     return;
   }
   const { draft } = result;
-  console.log(`# ${draft.name}`);
   console.log(`${draft.description}\n`);
   if (draft.upgradeSummary) console.log(`release note${draft.upgradePriority ? ` [${draft.upgradePriority}]` : ""}: ${draft.upgradeSummary}`);
   console.log(`prompt: instructions.md (${draft.botPrompt.length} chars)`);

@@ -14,7 +14,7 @@ import {
 const base = (yaml) =>
   validateFiles({
     "bot.yaml":
-      "formatVersion: 1\nname: T\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
+      "formatVersion: 1\ndescription: D\nmodelRoles:\n  - role: default\n    label: Main\n" +
       yaml,
     "instructions.md": "Be helpful.",
     "README.md": "# T",
@@ -93,7 +93,7 @@ describe("upgrade notes in source", () => {
     const parsed = await parseBotFiles({
       ...{
         "bot.yaml":
-          "formatVersion: 1\nname: T\ndescription: D\nupgradeSummary: Drops SMS support.\nupgradePriority: action\nmodelRoles:\n  - role: default\n    label: Main\n",
+          "formatVersion: 1\ndescription: D\nupgradeSummary: Drops SMS support.\nupgradePriority: action\nmodelRoles:\n  - role: default\n    label: Main\n",
         "instructions.md": "Be helpful.",
         "README.md": "# T",
       },
@@ -107,7 +107,7 @@ describe("upgrade notes in source", () => {
   it("never exports server-resolved source fields", async () => {
     const parsed = await parseBotFiles({
       "bot.yaml":
-        "formatVersion: 1\nname: T\ndescription: D\nupgradeSummary: Drops SMS support.\nmodelRoles:\n  - role: default\n    label: Main\n",
+        "formatVersion: 1\ndescription: D\nupgradeSummary: Drops SMS support.\nmodelRoles:\n  - role: default\n    label: Main\n",
       "instructions.md": "Be helpful.",
       "README.md": "# T",
     });
@@ -119,7 +119,6 @@ describe("upgrade notes in source", () => {
 
   it("throws on export with an invalid note", () => {
     assert.throws(() => exportBotFiles({
-      name: "T",
       description: "D",
       botPrompt: "Be helpful.",
       readme: "# T",
