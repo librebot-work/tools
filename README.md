@@ -362,8 +362,9 @@ recreate that configuration when a release is ready.
   `edit_event`, `cancel_event`, `manage_attendees`). `kind: google_drive`
   supports `list_files`, `download_file`, `get_file_metadata`, `export_file`,
   `upload_file`, `rename_file`, `create_subfolder`, and `replace_file_content`.
-  Drive scope is limited to direct children of the owner-bound folder; its
-  ID and the account grant belong to instance settings, never source.
+  The owner chooses each Drive group's folders in instance settings (any
+  folder, or specific folders including everything inside them); folder IDs
+  and the account grant never belong in source.
   Capability namespaces are exclusive to their kind.
   Model-facing tools are named `google_<product>_<verb>_<object>` (`docs`,
   `sheets`, `calendar`, `drive`); `google_get_operation`
@@ -381,7 +382,7 @@ recreate that configuration when a release is ready.
   `updateBorders` requests on one sheet ID. Exact `userEnteredFormat` masks
   allow fonts, colors, number formats, and layout without access to cell
   values, formulas, or structural edits.
-  Drive bindings are account-wide; calendar bindings pin exact calendar IDs
+  Docs and Sheets discovery is account-wide; calendar bindings pin exact calendar IDs
   with attendee/notification policy in owner instance settings, never
   portable source. The broad Docs `edit_document` grant is removed: sources
   declaring it fail validation and must declare `edit_document_content`,
