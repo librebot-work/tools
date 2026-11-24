@@ -12,7 +12,7 @@ import {
   WHATSAPP_CAPABILITIES, WHATSAPP_TRIGGER_EVENT_TYPES,
   CRON_TRIGGER_EVENT_TYPES,
   GOOGLE_ACTION_KINDS, GOOGLE_DOCS_CAPABILITIES, GOOGLE_SHEETS_CAPABILITIES,
-  GOOGLE_CALENDAR_CAPABILITIES,
+  GOOGLE_CALENDAR_CAPABILITIES, GOOGLE_DRIVE_CAPABILITIES,
   DECIDER_READ_CAPABILITIES,
   isModelRoleId, validateCronSchedule,
 } from "./contract.js";
@@ -22,6 +22,7 @@ const ACTION_CAPABILITIES = {
   google_docs: GOOGLE_DOCS_CAPABILITIES,
   google_sheets: GOOGLE_SHEETS_CAPABILITIES,
   google_calendar: GOOGLE_CALENDAR_CAPABILITIES,
+  google_drive: GOOGLE_DRIVE_CAPABILITIES,
 };
 const ACTION_KINDS = ["gitrepo", "whatsapp", ...GOOGLE_ACTION_KINDS];
 
@@ -587,7 +588,7 @@ export function validateActions(input, sink, file) {
     checkKeys(entry, ["key", "kind", "label", "capabilities"], field, sink, file);
     const key = entryId(entry.key, `${field}.key`, sink, file);
     const label = optionalText(entry.label, `${field}.label`, 100, sink, file);
-    if (!ACTION_KINDS.includes(entry.kind)) err(sink, file, `${field}.kind`, "must be gitrepo, whatsapp, google_docs, google_sheets, or google_calendar");
+    if (!ACTION_KINDS.includes(entry.kind)) err(sink, file, `${field}.kind`, "must be gitrepo, whatsapp, google_docs, google_sheets, google_calendar, or google_drive");
     const supported = ACTION_CAPABILITIES[entry.kind] ?? REPO_CAPABILITIES;
     if (key === undefined) return;
     if (seen.has(key)) err(sink, file, `${field}.key`, `contains duplicate key ${key}`);

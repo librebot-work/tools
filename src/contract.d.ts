@@ -27,10 +27,11 @@ export const GITREPO_TRIGGER_EVENT_TYPES: readonly [
 export const GITREPO_TRIGGER_EVENT_SOURCES: Readonly<Record<GitrepoTriggerEventType, { readonly github: readonly string[]; readonly gitlab: readonly string[] }>>;
 export const WHATSAPP_CAPABILITIES: readonly ["read_messages", "send_text", "set_reaction", "remove_reaction"];
 export const WHATSAPP_TRIGGER_EVENT_TYPES: readonly ["message.created", "reaction.changed"];
-export const GOOGLE_ACTION_KINDS: readonly ["google_docs", "google_sheets", "google_calendar"];
+export const GOOGLE_ACTION_KINDS: readonly ["google_docs", "google_sheets", "google_calendar", "google_drive"];
 export const GOOGLE_DOCS_CAPABILITIES: readonly ["search_documents", "read_document", "create_document", "edit_document_content", "format_document"];
 export const GOOGLE_SHEETS_CAPABILITIES: readonly ["search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells"];
 export const GOOGLE_CALENDAR_CAPABILITIES: readonly ["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"];
+export const GOOGLE_DRIVE_CAPABILITIES: readonly ["upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"];
 export const DECIDER_READ_CAPABILITIES: readonly [
   "read_issue", "search_issues", "read_change_request", "read_repository", "read_issue_artifacts",
   "read_messages",
@@ -46,6 +47,7 @@ export type WhatsAppCapability = typeof WHATSAPP_CAPABILITIES[number];
 export type WhatsAppTriggerEventType = typeof WHATSAPP_TRIGGER_EVENT_TYPES[number];
 export type GoogleActionKind = typeof GOOGLE_ACTION_KINDS[number];
 export type GoogleDocsCapability = typeof GOOGLE_DOCS_CAPABILITIES[number];
+export type GoogleDriveCapability = typeof GOOGLE_DRIVE_CAPABILITIES[number];
 export type GoogleSheetsCapability = typeof GOOGLE_SHEETS_CAPABILITIES[number];
 export type GoogleCalendarCapability = typeof GOOGLE_CALENDAR_CAPABILITIES[number];
 export const UPGRADE_PRIORITIES: readonly ["action", "notable"];

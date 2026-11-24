@@ -158,7 +158,8 @@ import {
   `isModelRoleId`, plus `REPO_CAPABILITIES`, `GITREPO_TRIGGER_EVENT_TYPES`,
   `WHATSAPP_CAPABILITIES`, `WHATSAPP_TRIGGER_EVENT_TYPES`,
   `GOOGLE_ACTION_KINDS`, `GOOGLE_DOCS_CAPABILITIES`,
-  `GOOGLE_SHEETS_CAPABILITIES`, `GOOGLE_CALENDAR_CAPABILITIES` (frozen arrays),
+  `GOOGLE_SHEETS_CAPABILITIES`, `GOOGLE_CALENDAR_CAPABILITIES`,
+  `GOOGLE_DRIVE_CAPABILITIES` (frozen arrays),
   `UPGRADE_PRIORITIES`, `MAX_UPGRADE_SUMMARY_CODEPOINTS`, and
   `validateUpgradeNote(summary, priority)` (throws a field-specific Error;
   shared with platform validation and Git history), and the derived
@@ -358,10 +359,14 @@ recreate that configuration when a release is ready.
   (`search_spreadsheets`, `read_spreadsheet`, `create_spreadsheet`,
   `write_values`, `append_values`, `write_formulas`, `format_cells`), and
   `kind: google_calendar` (`search_events`, `read_event`, `create_event`,
-  `edit_event`, `cancel_event`, `manage_attendees`). Capability namespaces are
-  exclusive to their kind.
+  `edit_event`, `cancel_event`, `manage_attendees`). `kind: google_drive`
+  supports `list_files`, `download_file`, `get_file_metadata`, `export_file`,
+  `upload_file`, `rename_file`, `create_subfolder`, and `replace_file_content`.
+  Drive scope is limited to direct children of the owner-bound folder; its
+  ID and the account grant belong to instance settings, never source.
+  Capability namespaces are exclusive to their kind.
   Model-facing tools are named `google_<product>_<verb>_<object>` (`docs`,
-  `sheets`, `calendar`); grants are unchanged, and `google_get_operation`
+  `sheets`, `calendar`, `drive`); `google_get_operation`
   is shared. `google_calendar_replace_event_attendees` replaces the whole
   list under `manage_attendees`.
   Content and style are separate grants: Docs

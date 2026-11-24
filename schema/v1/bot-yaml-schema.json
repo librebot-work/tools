@@ -166,11 +166,11 @@
         "required": ["key", "kind", "capabilities"],
         "properties": {
           "key": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
-          "kind": { "enum": ["gitrepo", "whatsapp", "google_docs", "google_sheets", "google_calendar"] },
+          "kind": { "enum": ["gitrepo", "whatsapp", "google_docs", "google_sheets", "google_calendar", "google_drive"] },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
           "capabilities": {
             "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true,
-            "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request", "comment_change_request", "read_issue_artifacts", "write_issue_artifacts", "read_messages", "send_text", "set_reaction", "remove_reaction", "search_documents", "read_document", "create_document", "edit_document_content", "format_document", "search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells", "search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"] }
+            "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request", "comment_change_request", "read_issue_artifacts", "write_issue_artifacts", "read_messages", "send_text", "set_reaction", "remove_reaction", "search_documents", "read_document", "create_document", "edit_document_content", "format_document", "search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells", "search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees", "upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"] }
           }
         },
         "allOf": [
@@ -189,6 +189,10 @@
           {
             "if": { "properties": { "kind": { "const": "google_calendar" } } },
             "then": { "properties": { "capabilities": { "maxItems": 6, "items": { "enum": ["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"] } } } }
+          },
+          {
+            "if": { "properties": { "kind": { "const": "google_drive" } } },
+            "then": { "properties": { "capabilities": { "maxItems": 8, "items": { "enum": ["upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"] } } } }
           },
           {
             "if": { "properties": { "kind": { "const": "gitrepo" } } },
