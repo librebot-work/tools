@@ -77,6 +77,13 @@ export const GOOGLE_DOCS_CAPABILITIES = Object.freeze(["search_documents", "read
 export const GOOGLE_SHEETS_CAPABILITIES = Object.freeze(["search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells"]);
 export const GOOGLE_CALENDAR_CAPABILITIES = Object.freeze(["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"]);
 export const GOOGLE_DRIVE_CAPABILITIES = Object.freeze(["upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"]);
+export const DRIVE_FOLDER_ACCESS_MODES = Object.freeze(["any_folder", "selected_folders"]);
+export const GOOGLE_FILE_ACCESS_MODES = Object.freeze(["any_file", "selected_files"]);
+export const WHATSAPP_CONTEXT_MODES = Object.freeze(["originating_chat", "selected_chats"]);
+export const WHATSAPP_OUTBOUND_MODES = Object.freeze(["originating_chat", "triggering_sender", "fixed_allowlist"]);
+export const WHATSAPP_AUDIENCE_MODES = Object.freeze(["anyone", "specific"]);
+export const WHATSAPP_CHAT_KINDS = Object.freeze(["private", "group"]);
+export const SELECTION_LIMIT_CAPS = Object.freeze({ maxFolders: 50, maxFiles: 50, maxChats: 100, maxCalendars: 100 });
 // Explicit allowlist: new action capabilities are not automatically usable by routers.
 export const DECIDER_READ_CAPABILITIES = Object.freeze([
   "read_issue", "search_issues", "read_change_request", "read_repository", "read_issue_artifacts",

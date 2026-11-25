@@ -138,6 +138,8 @@
             }
           },
           "enabledByDefault": { "type": "boolean" },
+          "audience": { "$ref": "#/$defs/whatsappAudience" },
+          "context": { "$ref": "#/$defs/whatsappContext" },
           "schedule": {
             "type": "object",
             "additionalProperties": false,
@@ -152,6 +154,7 @@
           "if": { "properties": { "kind": { "const": "whatsapp" } } },
           "then": { "properties": { "eventTypes": { "items": { "enum": ["message.created", "reaction.changed"] } } } },
           "else": { "if": { "properties": { "kind": { "const": "cron" } } },
+            "properties": { "audience": false, "context": false },
             "then": { "properties": { "eventTypes": { "maxItems": 1, "items": { "enum": ["cron.tick"] } } } },
             "else": { "properties": { "eventTypes": { "items": { "enum": ["issue.opened", "issue.updated", "issue.closed", "issue.reopened", "issue.comment.created", "issue.comment.updated", "change_request.opened", "change_request.updated", "change_request.closed", "change_request.reopened", "change_request.merged", "change_request.commits_updated", "change_request.checks_updated", "change_request.comment.created", "change_request.comment.updated", "change_request.approval_changed", "repository.pushed"] } } } } }
         }]
@@ -168,6 +171,11 @@
           "key": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
           "kind": { "enum": ["gitrepo", "whatsapp", "google_docs", "google_sheets", "google_calendar", "google_drive"] },
           "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "folderAccess": { "$ref": "#/$defs/driveFolderAccess" },
+          "fileAccess": { "$ref": "#/$defs/googleFileAccess" },
+          "calendars": { "$ref": "#/$defs/calendars" },
+          "context": { "$ref": "#/$defs/whatsappContext" },
+          "outbound": { "$ref": "#/$defs/whatsappOutbound" },
           "capabilities": {
             "type": "array", "minItems": 1, "maxItems": 16, "uniqueItems": true,
             "items": { "enum": ["read_issue", "push_branch", "propose_change", "comment_issue", "search_issues", "read_change_request", "read_repository", "update_issue_labels", "react_issue", "update_issue_body", "update_issue_title", "publish_attachments", "merge_change_request", "comment_change_request", "read_issue_artifacts", "write_issue_artifacts", "read_messages", "send_text", "set_reaction", "remove_reaction", "search_documents", "read_document", "create_document", "edit_document_content", "format_document", "search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells", "search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees", "upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"] }
@@ -176,7 +184,8 @@
         "allOf": [
           {
             "if": { "properties": { "kind": { "const": "whatsapp" } } },
-            "then": { "properties": { "capabilities": { "maxItems": 4, "items": { "enum": ["read_messages", "send_text", "set_reaction", "remove_reaction"] } } } }
+            "then": { "properties": { "capabilities": { "maxItems": 4, "items": { "enum": ["read_messages", "send_text", "set_reaction", "remove_reaction"] } } } },
+            "else": { "properties": { "context": false, "outbound": false } }
           },
           {
             "if": { "properties": { "kind": { "const": "google_docs" } } },
@@ -188,11 +197,17 @@
           },
           {
             "if": { "properties": { "kind": { "const": "google_calendar" } } },
-            "then": { "properties": { "capabilities": { "maxItems": 6, "items": { "enum": ["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"] } } } }
+            "then": { "properties": { "capabilities": { "maxItems": 6, "items": { "enum": ["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"] } } } },
+            "else": { "properties": { "calendars": false } }
           },
           {
             "if": { "properties": { "kind": { "const": "google_drive" } } },
-            "then": { "properties": { "capabilities": { "maxItems": 8, "items": { "enum": ["upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"] } } } }
+            "then": { "properties": { "capabilities": { "maxItems": 8, "items": { "enum": ["upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"] } } } },
+            "else": { "properties": { "folderAccess": false } }
+          },
+          {
+            "if": { "properties": { "kind": { "enum": ["google_docs", "google_sheets"] } } },
+            "else": { "properties": { "fileAccess": false } }
           },
           {
             "if": { "properties": { "kind": { "const": "gitrepo" } } },
@@ -257,6 +272,52 @@
           "url": { "type": "string", "format": "uri", "maxLength": 500 },
           "ref": { "type": "string", "maxLength": 256 }
         }
+      }
+    }
+  },
+  "$defs": {
+    "count50": { "type": "integer", "anyOf": [{ "const": -1 }, { "minimum": 1, "maximum": 50 }] },
+    "count100": { "type": "integer", "anyOf": [{ "const": -1 }, { "minimum": 1, "maximum": 100 }] },
+    "chatKinds": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["private", "group"] } },
+    "driveFolderAccess": {
+      "type": "object", "minProperties": 1, "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["any_folder", "selected_folders"] } },
+        "maxFolders": { "$ref": "#/$defs/count50" }
+      }
+    },
+    "googleFileAccess": {
+      "type": "object", "minProperties": 1, "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["any_file", "selected_files"] } },
+        "maxFiles": { "$ref": "#/$defs/count50" }
+      }
+    },
+    "calendars": {
+      "type": "object", "additionalProperties": false, "required": ["maxCalendars"],
+      "properties": { "maxCalendars": { "$ref": "#/$defs/count100" } }
+    },
+    "whatsappContext": {
+      "type": "object", "minProperties": 1, "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["originating_chat", "selected_chats"] } },
+        "maxChats": { "$ref": "#/$defs/count100" }
+      }
+    },
+    "whatsappOutbound": {
+      "type": "object", "minProperties": 1, "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["originating_chat", "triggering_sender", "fixed_allowlist"] } },
+        "chatKinds": { "$ref": "#/$defs/chatKinds" },
+        "maxChats": { "$ref": "#/$defs/count100" }
+      }
+    },
+    "whatsappAudience": {
+      "type": "object", "minProperties": 1, "additionalProperties": false,
+      "properties": {
+        "allow": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["anyone", "specific"] } },
+        "chatTypes": { "$ref": "#/$defs/chatKinds" },
+        "maxChats": { "$ref": "#/$defs/count100" }
       }
     }
   }

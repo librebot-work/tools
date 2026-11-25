@@ -283,6 +283,43 @@ This metadata is contextual evidence, not a server-enforced workflow
 transition. Recheck current permission when acting on an authorization-sensitive
 decision; do not silently proceed with unknown or stale authority.
 
+## Native connector selection limits
+
+Optional fields in `bot.yaml` constrain what the instance owner can choose.
+Omitting them allows all modes and leaves only the platform caps. Concrete
+folder, file, calendar, and WhatsApp chat or sender IDs never belong in source.
+
+| `actions[]` kind | Field | Allowed keys |
+| --- | --- | --- |
+| `google_drive` | `folderAccess` | `allow`: `any_folder`, `selected_folders`; `maxFolders`: cap 50 |
+| `google_docs`, `google_sheets` | `fileAccess` | `allow`: `any_file`, `selected_files`; `maxFiles`: cap 50 |
+| `google_calendar` | `calendars` | `maxCalendars`: required when `calendars` is present, cap 100 |
+| `whatsapp` with `read_messages` | `context` | `allow`: `originating_chat`, `selected_chats`; `maxChats`: cap 100 |
+| `whatsapp` with any write capability (anything other than `read_messages`) | `outbound` | `allow`: `originating_chat`, `triggering_sender`, `fixed_allowlist`; `chatKinds`: `private`, `group`; `maxChats`: cap 100 |
+
+| `triggers[]` kind | Field | Allowed keys |
+| --- | --- | --- |
+| `whatsapp` | `audience` | `allow`: `anyone`, `specific`; `chatTypes`: `private`, `group`; `maxChats`: cap 100 |
+| `whatsapp` | `context` | `allow`: `originating_chat`, `selected_chats`; `maxChats`: cap 100 |
+
+For example, `folderAccess: { allow: [selected_folders], maxFolders: 1 }`
+requires the owner to pick one Drive folder. Within each object:
+
+- `allow`, `chatKinds`, and `chatTypes` are optional lists of unique known
+  values; if present, the list must not be empty. Empty objects, unknown
+  keys, and fields on the wrong kind are rejected.
+- Each `max*` accepts `-1` (no bot limit; the platform cap still applies)
+  or an integer from 1 through its cap. Omission is equivalent to `-1`
+  except for the required `maxCalendars` key inside `calendars`. Zero, other
+  negative numbers, non-integers, and counts above the cap are rejected.
+- If `allow` is supplied with a `max*`, it must include the corresponding
+  selecting mode: `selected_folders`, `selected_files`, `selected_chats`,
+  `fixed_allowlist`, or `specific`.
+- An outbound `allow` of only `[triggering_sender]` cannot exclude `private`
+  via `chatKinds`. A Docs or Sheets group with a `fileAccess.allow` of only
+  `[selected_files]` cannot declare `create_document` or `create_spreadsheet`,
+  respectively: the new file would be outside the selection.
+
 ## CLI
 
 ```text
@@ -350,9 +387,11 @@ recreate that configuration when a release is ready.
   platform release before adopting a newer source contract.
 - Portable `actions` also accept `kind: whatsapp` with only `read_messages`,
   `send_text`, `set_reaction`, and `remove_reaction`. Repository capabilities
-  remain exclusive to `gitrepo`. Exact sender-phone bindings, independent read
-  context, destination policies, and automated-write consent belong to owner
-  instance settings, never portable source.
+  remain exclusive to `gitrepo`. The definition may limit read context and
+  outbound destination modes, chat kinds, and counts as described in
+  [Native connector selection limits](#native-connector-selection-limits).
+  Exact sender-phone bindings, concrete chats, and automated-write consent
+  remain in owner instance settings, never portable source.
 - Portable `actions` also accept `kind: google_docs` (`search_documents`,
   `read_document`, `create_document`, `edit_document_content`,
   `format_document`), `kind: google_sheets`
@@ -382,9 +421,23 @@ recreate that configuration when a release is ready.
   `updateBorders` requests on one sheet ID. Exact `userEnteredFormat` masks
   allow fonts, colors, number formats, and layout without access to cell
   values, formulas, or structural edits.
-  Docs and Sheets discovery is account-wide; calendar bindings pin exact calendar IDs
-  with attendee/notification policy in owner instance settings, never
-  portable source. The broad Docs `edit_document` grant is removed: sources
+  In instance settings, the owner chooses `any_file` (account-wide discovery)
+  or `selected_files` for each Docs or Sheets group, subject to `fileAccess`
+  in the definition. The owner binding stores `fileAccess: { scope: "any_file" }`
+  or `{ scope: "selected_files"; fileIds: string[] }` (1–50 unique IDs
+  matching `/^[A-Za-z0-9_-]{1,256}$/`). Older bindings without `fileAccess`
+  are read as `any_file` without migration. Saving `selected_files` with a
+  create capability is rejected even if the definition also allows `any_file`.
+  Selected files require `drive.readonly` and must be reachable, not trashed,
+  and of the correct MIME type; settings flag files the account cannot edit
+  if the group declares write capabilities. At runtime, out-of-scope IDs
+  return the same error as missing files, and create tools refuse to run.
+  Search in this scope filters results to the selection or, without a query,
+  returns selected file metadata, skipping missing, trashed, or wrong-type
+  files. File IDs never belong in source. Calendar bindings pin exact calendar
+  IDs with attendee/notification policy in owner instance settings, never
+  portable source; the definition can cap their number with `calendars`.
+  The broad Docs `edit_document` grant is removed: sources
   declaring it fail validation and must declare `edit_document_content`,
   `format_document`, or both.
 - Version history: 0.4.1 added the WhatsApp parser/schema contract; 0.4.2
@@ -407,7 +460,8 @@ recreate that configuration when a release is ready.
   the optional `upgradeSummary` release note with `upgradePriority`
   (`action` | `notable`, requires a summary) and the shared
   `validateUpgradeNote` contract helper; 0.4.18 requires explicit read-only
-  `deciderActions` per trigger and exports `DECIDER_READ_CAPABILITIES`.
+  `deciderActions` per trigger and exports `DECIDER_READ_CAPABILITIES`;
+  0.5.4 adds bot-definition selection limits for native connectors.
 - Clock triggers use `kind: cron`, `eventTypes: [cron.tick]`, and the usual
   `key`, `label`, `deciderInstructions`, and `deciderActions`. An optional
   `schedule: { expression: "0 9 * * 1-5", timeZone: America/New_York }`
@@ -417,6 +471,27 @@ recreate that configuration when a release is ready.
 - Portable WhatsApp triggers use `kind: whatsapp`, semantic `message.created`
   and/or `reaction.changed`, and the existing keyed decider definition fields.
   Event namespaces are checked against the selected trigger kind.
+  The definition can limit `audience` and read `context`; concrete chats and
+  senders remain in the instance binding.
+- The platform re-validates selection limits and checks that bindings fit on
+  instance save, trigger save, and upgrade. Drive and Docs/Sheets scopes
+  must be allowed, and selected IDs must fit the corresponding count limit.
+  Calendar ID counts must fit `maxCalendars`. WhatsApp action read scopes and
+  outbound modes must be allowed, outbound chat kinds must be a subset of
+  those allowed, and selected or fixed-list chat counts must fit their
+  respective limits.
+  For enabled WhatsApp triggers, the audience is `specific` if any chat or
+  sender IDs are configured and `anyone` otherwise; that mode must be allowed.
+  If the definition sets `audience.chatTypes`, the binding must set a subset.
+  The audience `maxChats` caps chat IDs, not sender IDs. Trigger read context,
+  when present, must use an allowed scope and fit its chat count limit.
+  Errors identify the field and the limit in plain language.
+  Settings offer only allowed modes, preselect and hide a sole option,
+  and cap selections (a limit of 1 uses single choice; `-1` or omission
+  displays the platform cap). An upgrade to a narrower definition marks
+  incompatible bindings for re-selection and fails with HTTP 400 until the
+  owner re-picks; the upgrade can include replacement `actionBindings` and
+  `triggerBindings`.
 - Ingestion: `parseBotFiles(tree)` -> persist `assets` bytes to GCS, fill
   the platform `BotKnowledge` path/storage fields, materialize `skillFiles`
   per skill, then run platform validation. `draft` carries no `tools` field.

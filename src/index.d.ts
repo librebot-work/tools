@@ -1,5 +1,6 @@
 // Type definitions for librebot-tools (hand-written; no build step).
 import type { DeciderReadCapability, ModelRoleId, RepoCapability, WhatsAppCapability, GoogleDocsCapability, GoogleSheetsCapability, GoogleCalendarCapability, GoogleDriveCapability } from "./contract.js";
+import type { DRIVE_FOLDER_ACCESS_MODES, GOOGLE_FILE_ACCESS_MODES, WHATSAPP_CONTEXT_MODES, WHATSAPP_OUTBOUND_MODES, WHATSAPP_AUDIENCE_MODES, WHATSAPP_CHAT_KINDS } from "./contract.js";
 export * from "./contract.js";
 
 export interface SourceIssue {
@@ -59,6 +60,13 @@ export interface BotUpgradeText {
   upgradePriority?: "action" | "notable";
 }
 
+export interface DriveFolderAccessLimit { allow?: (typeof DRIVE_FOLDER_ACCESS_MODES)[number][]; maxFolders?: number }
+export interface GoogleFileAccessLimit { allow?: (typeof GOOGLE_FILE_ACCESS_MODES)[number][]; maxFiles?: number }
+export interface CalendarLimit { maxCalendars: number }
+export interface WhatsAppContextLimit { allow?: (typeof WHATSAPP_CONTEXT_MODES)[number][]; maxChats?: number }
+export interface WhatsAppOutboundLimit { allow?: (typeof WHATSAPP_OUTBOUND_MODES)[number][]; chatKinds?: (typeof WHATSAPP_CHAT_KINDS)[number][]; maxChats?: number }
+export interface WhatsAppAudienceLimit { allow?: (typeof WHATSAPP_AUDIENCE_MODES)[number][]; chatTypes?: (typeof WHATSAPP_CHAT_KINDS)[number][]; maxChats?: number }
+
 export interface BotDraft extends BotUpgradeText {
   description: string;
   botPrompt: string;
@@ -70,9 +78,16 @@ export interface BotDraft extends BotUpgradeText {
   knowledge: BotKnowledge[];
   skills: BotSkill[];
   connectors: BotConnector[];
-  triggers: Array<{ key: string; label: string; kind: "gitrepo" | "whatsapp" | "cron"; eventTypes: string[]; description?: string; schedule?: { expression: string; timeZone: string }; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: ModelRoleId; deciderInstructions: string; deciderActions: Array<{ action: string; capabilities: DeciderReadCapability[] }>; enabledByDefault?: boolean }>;
+  triggers: Array<{ key: string; label: string; kind: "gitrepo" | "whatsapp" | "cron"; eventTypes: string[]; description?: string; schedule?: { expression: string; timeZone: string }; inputs?: Array<{ key: string; label?: string; type: "string" | "number" | "boolean" | "select"; required?: boolean; options?: string[]; help?: string }>; deciderRole?: ModelRoleId; deciderInstructions: string; deciderActions: Array<{ action: string; capabilities: DeciderReadCapability[] }>; enabledByDefault?: boolean; audience?: WhatsAppAudienceLimit; context?: WhatsAppContextLimit }>;
   workspace: Array<{ key: string; label?: string; path: string }>;
-  actions: Array<{ key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] } | { key: string; kind: "whatsapp"; label?: string; capabilities: WhatsAppCapability[] } | { key: string; kind: "google_docs"; label?: string; capabilities: GoogleDocsCapability[] } | { key: string; kind: "google_sheets"; label?: string; capabilities: GoogleSheetsCapability[] } | { key: string; kind: "google_calendar"; label?: string; capabilities: GoogleCalendarCapability[] } | { key: string; kind: "google_drive"; label?: string; capabilities: GoogleDriveCapability[] }>;
+  actions: Array<
+    { key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] }
+    | { key: string; kind: "whatsapp"; label?: string; capabilities: WhatsAppCapability[]; context?: WhatsAppContextLimit; outbound?: WhatsAppOutboundLimit }
+    | { key: string; kind: "google_docs"; label?: string; capabilities: GoogleDocsCapability[]; fileAccess?: GoogleFileAccessLimit }
+    | { key: string; kind: "google_sheets"; label?: string; capabilities: GoogleSheetsCapability[]; fileAccess?: GoogleFileAccessLimit }
+    | { key: string; kind: "google_calendar"; label?: string; capabilities: GoogleCalendarCapability[]; calendars?: CalendarLimit }
+    | { key: string; kind: "google_drive"; label?: string; capabilities: GoogleDriveCapability[]; folderAccess?: DriveFolderAccessLimit }
+  >;
   icon?: string;
 }
 export interface KnowledgeAsset {

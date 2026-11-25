@@ -32,6 +32,13 @@ export const GOOGLE_DOCS_CAPABILITIES: readonly ["search_documents", "read_docum
 export const GOOGLE_SHEETS_CAPABILITIES: readonly ["search_spreadsheets", "read_spreadsheet", "create_spreadsheet", "write_values", "append_values", "write_formulas", "format_cells"];
 export const GOOGLE_CALENDAR_CAPABILITIES: readonly ["search_events", "read_event", "create_event", "edit_event", "cancel_event", "manage_attendees"];
 export const GOOGLE_DRIVE_CAPABILITIES: readonly ["upload_file", "list_files", "download_file", "get_file_metadata", "export_file", "rename_file", "create_subfolder", "replace_file_content"];
+export const DRIVE_FOLDER_ACCESS_MODES: readonly ["any_folder", "selected_folders"];
+export const GOOGLE_FILE_ACCESS_MODES: readonly ["any_file", "selected_files"];
+export const WHATSAPP_CONTEXT_MODES: readonly ["originating_chat", "selected_chats"];
+export const WHATSAPP_OUTBOUND_MODES: readonly ["originating_chat", "triggering_sender", "fixed_allowlist"];
+export const WHATSAPP_AUDIENCE_MODES: readonly ["anyone", "specific"];
+export const WHATSAPP_CHAT_KINDS: readonly ["private", "group"];
+export const SELECTION_LIMIT_CAPS: Readonly<{ maxFolders: 50; maxFiles: 50; maxChats: 100; maxCalendars: 100 }>;
 export const DECIDER_READ_CAPABILITIES: readonly [
   "read_issue", "search_issues", "read_change_request", "read_repository", "read_issue_artifacts",
   "read_messages",

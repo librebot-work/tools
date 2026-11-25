@@ -13,6 +13,8 @@ import {
   CRON_TRIGGER_EVENT_TYPES,
   GOOGLE_ACTION_KINDS, GOOGLE_DOCS_CAPABILITIES, GOOGLE_SHEETS_CAPABILITIES,
   GOOGLE_CALENDAR_CAPABILITIES, GOOGLE_DRIVE_CAPABILITIES,
+  DRIVE_FOLDER_ACCESS_MODES, GOOGLE_FILE_ACCESS_MODES, WHATSAPP_CONTEXT_MODES,
+  WHATSAPP_OUTBOUND_MODES, WHATSAPP_AUDIENCE_MODES, WHATSAPP_CHAT_KINDS, SELECTION_LIMIT_CAPS,
   DECIDER_READ_CAPABILITIES,
   isModelRoleId, validateCronSchedule,
 } from "./contract.js";
@@ -571,6 +573,65 @@ export function validateWorkspaceMounts(input, sink, file) {
   return mounts;
 }
 
+const SELECTION_LIMITS = {
+  folderAccess: { kinds: ["google_drive"], max: "maxFolders", modes: DRIVE_FOLDER_ACCESS_MODES, selecting: "selected_folders" },
+  fileAccess: { kinds: ["google_docs", "google_sheets"], max: "maxFiles", modes: GOOGLE_FILE_ACCESS_MODES, selecting: "selected_files" },
+  calendars: { kinds: ["google_calendar"], max: "maxCalendars" },
+  context: { kinds: ["whatsapp"], max: "maxChats", modes: WHATSAPP_CONTEXT_MODES, selecting: "selected_chats" },
+  outbound: { kinds: ["whatsapp"], max: "maxChats", modes: WHATSAPP_OUTBOUND_MODES, selecting: "fixed_allowlist", chatField: "chatKinds" },
+  audience: { kinds: ["whatsapp"], max: "maxChats", modes: WHATSAPP_AUDIENCE_MODES, selecting: "specific", chatField: "chatTypes" },
+};
+const ACTION_SELECTION_FIELDS = ["folderAccess", "fileAccess", "calendars", "context", "outbound"];
+const TRIGGER_SELECTION_FIELDS = ["audience", "context"];
+
+function validateSelectionModes(value, modes, field, sink, file) {
+  if (!Array.isArray(value) || value.length === 0 || new Set(value).size !== value.length || value.some(mode => !modes.includes(mode))) {
+    err(sink, file, field, `must be a non-empty array of unique values from: ${modes.join(", ")}`);
+    return false;
+  }
+  return true;
+}
+
+function validateSelectionLimits(entry, fields, capabilities, path, sink, file) {
+  const limits = {};
+  for (const key of fields) {
+    const value = entry[key];
+    if (value === undefined) continue;
+    const field = `${path}.${key}`;
+    const { kinds, max, modes, selecting, chatField } = SELECTION_LIMITS[key];
+    if (!kinds.includes(entry.kind)) {
+      err(sink, file, field, `is only supported for ${kinds.join(" or ")}`);
+      continue;
+    }
+    if (capabilities && key === "context" && !capabilities.has("read_messages")) err(sink, file, field, "requires read_messages");
+    if (capabilities && key === "outbound" && !WHATSAPP_CAPABILITIES.some(cap => cap !== "read_messages" && capabilities.has(cap))) err(sink, file, field, "requires a write capability");
+    if (!isRecord(value) || (modes && Object.keys(value).length === 0)) {
+      err(sink, file, field, "must be a non-empty object");
+      continue;
+    }
+    checkKeys(value, [max, ...(modes ? ["allow"] : []), ...(chatField ? [chatField] : [])], field, sink, file);
+    const validAllow = modes && value.allow !== undefined && validateSelectionModes(value.allow, modes, `${field}.allow`, sink, file);
+    const validChat = chatField && value[chatField] !== undefined && validateSelectionModes(value[chatField], WHATSAPP_CHAT_KINDS, `${field}.${chatField}`, sink, file);
+    if (!modes || value[max] !== undefined) {
+      const count = value[max];
+      const cap = SELECTION_LIMIT_CAPS[max];
+      if (count !== -1 && (!Number.isInteger(count) || count < 1 || count > cap)) err(sink, file, `${field}.${max}`, `must be -1 or an integer from 1 to ${cap}`);
+      if (validAllow && !value.allow.includes(selecting)) err(sink, file, `${field}.${max}`, `requires ${selecting} in allow`);
+    }
+    if (validAllow && value.allow.length === 1) {
+      if (key === "outbound" && value.allow[0] === "triggering_sender" && validChat && !value.chatKinds.includes("private")) {
+        err(sink, file, `${field}.chatKinds`, "must include private when only triggering_sender is allowed");
+      }
+      if (key === "fileAccess" && value.allow[0] === "selected_files") {
+        const create = entry.kind === "google_docs" ? "create_document" : "create_spreadsheet";
+        if (capabilities.has(create)) err(sink, file, `${field}.allow`, `must include any_file when ${create} is declared`);
+      }
+    }
+    limits[key] = value;
+  }
+  return limits;
+}
+
 export function validateActions(input, sink, file) {
   if (input === undefined) return [];
   if (!Array.isArray(input) || input.length > 20) {
@@ -585,7 +646,7 @@ export function validateActions(input, sink, file) {
       err(sink, file, field, "must be an object");
       return;
     }
-    checkKeys(entry, ["key", "kind", "label", "capabilities"], field, sink, file);
+    checkKeys(entry, ["key", "kind", "label", "capabilities", ...ACTION_SELECTION_FIELDS], field, sink, file);
     const key = entryId(entry.key, `${field}.key`, sink, file);
     const label = optionalText(entry.label, `${field}.label`, 100, sink, file);
     if (!ACTION_KINDS.includes(entry.kind)) err(sink, file, `${field}.kind`, "must be gitrepo, whatsapp, google_docs, google_sheets, google_calendar, or google_drive");
@@ -613,7 +674,8 @@ export function validateActions(input, sink, file) {
     ) {
       err(sink, file, `${field}.capabilities`, "write_issue_artifacts requires read_issue_artifacts in the same action group");
     }
-    out.push({ key, kind: entry.kind, ...(label === undefined ? {} : { label }), capabilities: [...capabilities] });
+    const limits = validateSelectionLimits(entry, ACTION_SELECTION_FIELDS, capabilities, field, sink, file);
+    out.push({ key, kind: entry.kind, ...(label === undefined ? {} : { label }), capabilities: [...capabilities], ...limits });
   });
   return out;
 }
@@ -807,6 +869,7 @@ export function validateTriggerDefinitions(input, actions, sink, file) {
         "deciderInstructions",
         "deciderActions",
         "enabledByDefault",
+        ...TRIGGER_SELECTION_FIELDS,
       ],
       field,
       sink,
@@ -892,6 +955,7 @@ export function validateTriggerDefinitions(input, actions, sink, file) {
       eventTypes,
       deciderInstructions,
       deciderActions: validateDeciderActions(entry.deciderActions, actions, `${field}.deciderActions`, sink, file),
+      ...validateSelectionLimits(entry, TRIGGER_SELECTION_FIELDS, null, field, sink, file),
     };
     const description = optionalText(
       entry.description,
