@@ -320,6 +320,19 @@ requires the owner to pick one Drive folder. Within each object:
   `[selected_files]` cannot declare `create_document` or `create_spreadsheet`,
   respectively: the new file would be outside the selection.
 
+## WhatsApp outbound recommendations
+
+On a `kind: whatsapp` action group with a write capability, `outboundDefaults`
+can suggest `maxActionsPerRun` (1–100), `rateLimit: { maxActions, windowSeconds }`
+(1–1,000 actions, 1–86,400 seconds; both keys required), and `reactionTargets`
+(`triggering_message` or `associated_messages`). The numbers must be integers.
+For example: `outboundDefaults: { maxActionsPerRun: 10, rateLimit: { maxActions: 20, windowSeconds: 60 } }`.
+
+This optional metadata prefills new bindings; omitted values keep the
+platform's conservative defaults. Unlike `outbound`, it never limits or
+changes an existing policy. Owners may explicitly apply it in settings or
+during an upgrade. It does not grant consent or choose destinations.
+
 ## CLI
 
 ```text

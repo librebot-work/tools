@@ -26,6 +26,13 @@ export const GITREPO_TRIGGER_EVENT_TYPES: readonly [
 ];
 export const GITREPO_TRIGGER_EVENT_SOURCES: Readonly<Record<GitrepoTriggerEventType, { readonly github: readonly string[]; readonly gitlab: readonly string[] }>>;
 export const WHATSAPP_CAPABILITIES: readonly ["read_messages", "send_text", "set_reaction", "remove_reaction"];
+export const WHATSAPP_REACTION_TARGETS: readonly ["triggering_message", "associated_messages"];
+export const WHATSAPP_OUTBOUND_CAPS: Readonly<{ maxActionsPerRun: 100; maxActions: 1000; windowSeconds: 86400 }>;
+export interface WhatsAppOutboundDefaults {
+  maxActionsPerRun?: number;
+  rateLimit?: { maxActions: number; windowSeconds: number };
+  reactionTargets?: typeof WHATSAPP_REACTION_TARGETS[number];
+}
 export const WHATSAPP_TRIGGER_EVENT_TYPES: readonly ["message.created", "reaction.changed"];
 export const GOOGLE_ACTION_KINDS: readonly ["google_docs", "google_sheets", "google_calendar", "google_drive"];
 export const GOOGLE_DOCS_CAPABILITIES: readonly ["search_documents", "read_document", "create_document", "edit_document_content", "format_document"];

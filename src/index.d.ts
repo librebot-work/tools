@@ -1,5 +1,5 @@
 // Type definitions for librebot-tools (hand-written; no build step).
-import type { DeciderReadCapability, ModelRoleId, RepoCapability, WhatsAppCapability, GoogleDocsCapability, GoogleSheetsCapability, GoogleCalendarCapability, GoogleDriveCapability } from "./contract.js";
+import type { DeciderReadCapability, ModelRoleId, RepoCapability, WhatsAppCapability, WhatsAppOutboundDefaults, GoogleDocsCapability, GoogleSheetsCapability, GoogleCalendarCapability, GoogleDriveCapability } from "./contract.js";
 import type { DRIVE_FOLDER_ACCESS_MODES, GOOGLE_FILE_ACCESS_MODES, WHATSAPP_CONTEXT_MODES, WHATSAPP_OUTBOUND_MODES, WHATSAPP_AUDIENCE_MODES, WHATSAPP_CHAT_KINDS } from "./contract.js";
 export * from "./contract.js";
 
@@ -82,7 +82,7 @@ export interface BotDraft extends BotUpgradeText {
   workspace: Array<{ key: string; label?: string; path: string }>;
   actions: Array<
     { key: string; kind: "gitrepo"; label?: string; capabilities: RepoCapability[] }
-    | { key: string; kind: "whatsapp"; label?: string; capabilities: WhatsAppCapability[]; context?: WhatsAppContextLimit; outbound?: WhatsAppOutboundLimit }
+    | { key: string; kind: "whatsapp"; label?: string; capabilities: WhatsAppCapability[]; context?: WhatsAppContextLimit; outbound?: WhatsAppOutboundLimit; outboundDefaults?: WhatsAppOutboundDefaults }
     | { key: string; kind: "google_docs"; label?: string; capabilities: GoogleDocsCapability[]; fileAccess?: GoogleFileAccessLimit }
     | { key: string; kind: "google_sheets"; label?: string; capabilities: GoogleSheetsCapability[]; fileAccess?: GoogleFileAccessLimit }
     | { key: string; kind: "google_calendar"; label?: string; capabilities: GoogleCalendarCapability[]; calendars?: CalendarLimit }

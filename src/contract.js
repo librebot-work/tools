@@ -71,6 +71,8 @@ export const GITREPO_TRIGGER_EVENT_SOURCES = Object.freeze({
   "repository.pushed": source(["Push"], ["Push events"]),
 });
 export const WHATSAPP_CAPABILITIES = Object.freeze(["read_messages", "send_text", "set_reaction", "remove_reaction"]);
+export const WHATSAPP_REACTION_TARGETS = Object.freeze(["triggering_message", "associated_messages"]);
+export const WHATSAPP_OUTBOUND_CAPS = Object.freeze({ maxActionsPerRun: 100, maxActions: 1000, windowSeconds: 86400 });
 export const WHATSAPP_TRIGGER_EVENT_TYPES = Object.freeze(["message.created", "reaction.changed"]);
 export const GOOGLE_ACTION_KINDS = Object.freeze(["google_docs", "google_sheets", "google_calendar", "google_drive"]);
 export const GOOGLE_DOCS_CAPABILITIES = Object.freeze(["search_documents", "read_document", "create_document", "edit_document_content", "format_document"]);

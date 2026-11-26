@@ -50,6 +50,40 @@ triggers:
   assert.deepEqual(roundtrip.draft.triggers, draft.triggers);
 });
 
+it("round-trips full and partial WhatsApp outbound recommendations", async () => {
+  const { draft } = await parseBotFiles(source(`actions:
+  - key: reply
+    kind: whatsapp
+    capabilities: [send_text, set_reaction]
+    outboundDefaults: { maxActionsPerRun: 10, rateLimit: { maxActions: 20, windowSeconds: 60 }, reactionTargets: associated_messages }
+  - key: notify
+    kind: whatsapp
+    capabilities: [send_text]
+    outboundDefaults: { maxActionsPerRun: 100 }
+`));
+  assert.deepEqual(draft.actions.map(group => group.outboundDefaults), [
+    { maxActionsPerRun: 10, rateLimit: { maxActions: 20, windowSeconds: 60 }, reactionTargets: "associated_messages" },
+    { maxActionsPerRun: 100 },
+  ]);
+  assert.deepEqual((await parseBotFiles(exportBotFiles(draft))).draft.actions, draft.actions);
+});
+
+it("rejects invalid outbound recommendations in bot YAML", async () => {
+  for (const [outboundDefaults, suffix] of [
+    [null, ""], [[], ""], [{ chatIds: ["chat"] }, ""],
+    [{ maxActionsPerRun: 0 }, ".maxActionsPerRun"], [{ maxActionsPerRun: 101 }, ".maxActionsPerRun"],
+    [{ maxActionsPerRun: 1.5 }, ".maxActionsPerRun"], [{ reactionTargets: "any_message" }, ".reactionTargets"],
+    [{ rateLimit: { maxActions: 10 } }, ".rateLimit.windowSeconds"],
+    [{ rateLimit: { maxActions: 1001, windowSeconds: 60 } }, ".rateLimit.maxActions"],
+    [{ rateLimit: { maxActions: 1, windowSeconds: 86401 } }, ".rateLimit.windowSeconds"],
+  ]) {
+    await rejects(definitions([action("whatsapp", ["send_text"], { outboundDefaults })]), `actions[0].outboundDefaults${suffix}`);
+  }
+  const outboundDefaults = { maxActionsPerRun: 10 };
+  await rejects(definitions([action("whatsapp", ["read_messages"], { outboundDefaults })]), "actions[0].outboundDefaults");
+  await rejects(definitions([action("gitrepo", ["read_issue"], { outboundDefaults })]), "actions[0].outboundDefaults");
+});
+
 async function rejects(files, field) {
   const result = await validateFiles(files);
   assert.equal(result.ok, false, field);

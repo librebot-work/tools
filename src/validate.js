@@ -15,6 +15,7 @@ import {
   GOOGLE_CALENDAR_CAPABILITIES, GOOGLE_DRIVE_CAPABILITIES,
   DRIVE_FOLDER_ACCESS_MODES, GOOGLE_FILE_ACCESS_MODES, WHATSAPP_CONTEXT_MODES,
   WHATSAPP_OUTBOUND_MODES, WHATSAPP_AUDIENCE_MODES, WHATSAPP_CHAT_KINDS, SELECTION_LIMIT_CAPS,
+  WHATSAPP_OUTBOUND_CAPS, WHATSAPP_REACTION_TARGETS,
   DECIDER_READ_CAPABILITIES,
   isModelRoleId, validateCronSchedule,
 } from "./contract.js";
@@ -632,6 +633,39 @@ function validateSelectionLimits(entry, fields, capabilities, path, sink, file) 
   return limits;
 }
 
+function validateOutboundDefaults(entry, capabilities, path, sink, file) {
+  const value = entry.outboundDefaults;
+  if (value === undefined) return undefined;
+  const field = `${path}.outboundDefaults`;
+  if (entry.kind !== "whatsapp" || !WHATSAPP_CAPABILITIES.some(cap => cap !== "read_messages" && capabilities.has(cap))) {
+    err(sink, file, field, "requires a WhatsApp write capability");
+    return undefined;
+  }
+  if (!isRecord(value)) {
+    err(sink, file, field, "must be an object");
+    return undefined;
+  }
+  checkKeys(value, ["maxActionsPerRun", "rateLimit", "reactionTargets"], field, sink, file);
+  const checkNumber = (number, key, parent = field) => {
+    const max = WHATSAPP_OUTBOUND_CAPS[key];
+    if (!Number.isInteger(number) || number < 1 || number > max) err(sink, file, `${parent}.${key}`, `must be an integer from 1 to ${max}`);
+  };
+  if (value.maxActionsPerRun !== undefined) checkNumber(value.maxActionsPerRun, "maxActionsPerRun");
+  if (value.reactionTargets !== undefined && !WHATSAPP_REACTION_TARGETS.includes(value.reactionTargets)) {
+    err(sink, file, `${field}.reactionTargets`, `must be one of: ${WHATSAPP_REACTION_TARGETS.join(", ")}`);
+  }
+  if (value.rateLimit !== undefined) {
+    const rateField = `${field}.rateLimit`;
+    if (!isRecord(value.rateLimit)) err(sink, file, rateField, "must be an object");
+    else {
+      checkKeys(value.rateLimit, ["maxActions", "windowSeconds"], rateField, sink, file);
+      checkNumber(value.rateLimit.maxActions, "maxActions", rateField);
+      checkNumber(value.rateLimit.windowSeconds, "windowSeconds", rateField);
+    }
+  }
+  return value;
+}
+
 export function validateActions(input, sink, file) {
   if (input === undefined) return [];
   if (!Array.isArray(input) || input.length > 20) {
@@ -646,7 +680,7 @@ export function validateActions(input, sink, file) {
       err(sink, file, field, "must be an object");
       return;
     }
-    checkKeys(entry, ["key", "kind", "label", "capabilities", ...ACTION_SELECTION_FIELDS], field, sink, file);
+    checkKeys(entry, ["key", "kind", "label", "capabilities", "outboundDefaults", ...ACTION_SELECTION_FIELDS], field, sink, file);
     const key = entryId(entry.key, `${field}.key`, sink, file);
     const label = optionalText(entry.label, `${field}.label`, 100, sink, file);
     if (!ACTION_KINDS.includes(entry.kind)) err(sink, file, `${field}.kind`, "must be gitrepo, whatsapp, google_docs, google_sheets, google_calendar, or google_drive");
@@ -675,7 +709,8 @@ export function validateActions(input, sink, file) {
       err(sink, file, `${field}.capabilities`, "write_issue_artifacts requires read_issue_artifacts in the same action group");
     }
     const limits = validateSelectionLimits(entry, ACTION_SELECTION_FIELDS, capabilities, field, sink, file);
-    out.push({ key, kind: entry.kind, ...(label === undefined ? {} : { label }), capabilities: [...capabilities], ...limits });
+    const outboundDefaults = validateOutboundDefaults(entry, capabilities, field, sink, file);
+    out.push({ key, kind: entry.kind, ...(label === undefined ? {} : { label }), capabilities: [...capabilities], ...limits, ...(outboundDefaults === undefined ? {} : { outboundDefaults }) });
   });
   return out;
 }
